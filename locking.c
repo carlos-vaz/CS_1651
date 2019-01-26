@@ -11,8 +11,9 @@
 /* Exercise 1:
  *     Basic memory barrier
  */
-void mem_barrier() {
+void mem_barrier(void *p) {
     /* Implement this */
+	asm (::"m" (*p));
 }
 
 
@@ -25,6 +26,7 @@ atomic_sub( int * value,
 	    int   dec_val)
 {
     /* Implement this */
+
 }
 
 void
