@@ -13,7 +13,7 @@
  */
 void mem_barrier(void *p) {
     /* Implement this */
-	asm (::"m" (*p));
+	asm (""::"m" (*p));
 }
 
 
