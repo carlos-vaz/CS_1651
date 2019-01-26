@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include "locking.h"
 
 #define N 1000
 
@@ -13,7 +12,7 @@ int main() {
 	// With mem_barrier
 	i=0;
 	for (; i<N; i++) {
-		mem_barrier(&i);
+		asm (""::"m" (i));
 		a[i]++;
 	}
 }
