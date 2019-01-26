@@ -5,6 +5,8 @@
 
 //typedef unsigned long long uintptr_t;
 
+void mem_barrier(void *);
+
 /* Simple atomic operations */
 void atomic_sub(int * dst, int dec_value);
 void atomic_add(int * dst, int add_value);
