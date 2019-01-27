@@ -12,7 +12,6 @@
  *     Basic memory barrier
  */
 void mem_barrier(void *p) {
-    /* Implement this */
 	asm (""::"m" (*p));
 }
 
@@ -25,15 +24,14 @@ void
 atomic_sub( int * value,
 	    int   dec_val)
 {
-    /* Implement this */
-
+	asm ("lock sub %1, %0;\n" : "+m" (*value) : "r" (dec_val));
 }
 
 void
 atomic_add( int * value,
 	    int   inc_val)
 {
-    /* Implement this */
+	asm ("lock add %1, %0;\n" : "+m" (*value) : "r" (inc_val));
 }
 
 
@@ -46,34 +44,40 @@ atomic_add( int * value,
 /* Compare and Swap
  * Returns the value that was stored at *ptr when this function was called
  * Sets '*ptr' to 'new' if '*ptr' == 'expected'
+ * Sets 'expected' to '*ptr' if '*ptr' != 'expected' (needed for determining who locked)
  */
 unsigned int
 compare_and_swap(unsigned int * ptr,
-		 unsigned int   expected,
+		 unsigned int * expected,
 		 unsigned int   new)
 {
-    /* Implement this */
-
-    return 0;
+	unsigned int original = *ptr;
+	asm ("lock cmpxchg %2, %0;\n" : "+m" (*ptr), "+a" (*expected) : "r" (new));
+	return original;
 }
 
 void
 spinlock_init(struct spinlock * lock)
 {
-    /* Implement this */
+	lock->free = 1;
 }
 
 void
 spinlock_lock(struct spinlock * lock)
 {
-    /* Implement this */
+	unsigned int expect = 0;
+	while( expect == 0 ) {
+		expect = 1;
+		compare_and_swap(&(lock->free), &expect, 0);
+	}
+	// If got here, expect == 1 & lock->free = 0 (your lock);
 }
 
 
 void
 spinlock_unlock(struct spinlock * lock)
 {
-    /* Implement this */
+	lock->free = 1;
 }
 
 
@@ -94,13 +98,13 @@ void
 barrier_init(struct barrier * bar,
 	     int              count)
 {
-    /* Implement this */
+	bar->init_count = count;
 }
 
 void
 barrier_wait(struct barrier * bar)
 {
-    /* Implement this */
+	
 }
 
 
@@ -111,7 +115,9 @@ barrier_wait(struct barrier * bar)
 void
 rw_lock_init(struct read_write_lock * lock)
 {
-    /* Implement this */
+	lock->num_readers = 0;
+	lock->writer = 0;
+	lock->mutex = malloc(sizeof(struct spinlock));
 }
 
 
