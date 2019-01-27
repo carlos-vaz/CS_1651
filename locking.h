@@ -32,7 +32,7 @@ struct spinlock {
     unsigned int free;
 };
 
-unsigned int compare_and_swap(unsigned int * ptr, unsigned int *expected, unsigned int new);
+unsigned int compare_and_swap(unsigned int * ptr, unsigned int expected, unsigned int new);
 
 void spinlock_init(struct spinlock * lock);
 void spinlock_lock(struct spinlock * lock);
@@ -44,6 +44,7 @@ struct read_write_lock {
     int num_readers;
     int writer; 
 
+    struct spinlock *w_mutex;
     struct spinlock *mutex;
 };
 

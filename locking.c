@@ -44,16 +44,15 @@ atomic_add( int * value,
 /* Compare and Swap
  * Returns the value that was stored at *ptr when this function was called
  * Sets '*ptr' to 'new' if '*ptr' == 'expected'
- * Sets 'expected' to '*ptr' if '*ptr' != 'expected' (needed for determining who locked)
  */
 unsigned int
 compare_and_swap(unsigned int * ptr,
-		 unsigned int * expected,
+		 unsigned int   expected,
 		 unsigned int   new)
 {
-	unsigned int original = *ptr;
-	asm ("lock cmpxchg %2, %0;\n" : "+m" (*ptr), "+a" (*expected) : "r" (new));
-	return original;
+	unsigned int original;
+	asm ("lock cmpxchg %2, %0;\n" : "+m" (*ptr), "=a" (original) : "r" (new), "1" (expected));
+	return original; 
 }
 
 void
@@ -65,12 +64,7 @@ spinlock_init(struct spinlock * lock)
 void
 spinlock_lock(struct spinlock * lock)
 {
-	unsigned int expect = 0;
-	while( expect == 0 ) {
-		expect = 1;
-		compare_and_swap(&(lock->free), &expect, 0);
-	}
-	// If got here, expect == 1 & lock->free = 0 (your lock);
+	while(compare_and_swap(&(lock->free), 1, 0)==0);	// spin
 }
 
 
@@ -86,8 +80,9 @@ int
 atomic_add_ret_prev(int * value,
 		    int   inc_val)
 {
-    /* Implement this */
-    return 0;
+	int ret;
+	asm ("lock xadd %1, %0;\n" : "+m" (*value), "=r" (ret) : "1" (inc_val));
+	return ret;
 }
 
 /* Exercise 4:
@@ -99,11 +94,21 @@ barrier_init(struct barrier * bar,
 	     int              count)
 {
 	bar->init_count = count;
+	bar->iterations = 0;
+	bar->cur_count  = 0;
 }
 
 void
 barrier_wait(struct barrier * bar)
 {
+	int my_iter = bar->iterations;				// save old iterations
+	int prev = atomic_add_ret_prev(&(bar->cur_count), 1);	// thread-safe cur_count++
+	if(prev == bar->init_count-1) {				// last thread cleans up
+		bar->cur_count = 0;					// reset cur_count
+		bar->iterations++;					// enable next barrier
+		return;
+	}
+	while(bar->iterations != my_iter+1);			// spin otherwise
 	
 }
 
@@ -117,33 +122,54 @@ rw_lock_init(struct read_write_lock * lock)
 {
 	lock->num_readers = 0;
 	lock->writer = 0;
-	lock->mutex = malloc(sizeof(struct spinlock));
+	struct spinlock *sl0 = malloc(sizeof(struct spinlock));
+	struct spinlock *sl1 = malloc(sizeof(struct spinlock));
+	spinlock_init(sl0);	// sl0->free = 1;
+	spinlock_init(sl1);	// sl1->free = 1;
+	lock->mutex = sl0;
+	lock->w_mutex=sl1;
 }
 
 
 void
 rw_read_lock(struct read_write_lock * lock)
 {
-    /* Implement this */
+	while(1) {
+		while(lock->writer==1);	// most spinning done here
+		spinlock_lock(lock->mutex);
+		if(lock->writer==0) { 	// high probability it will be 0
+			lock->num_readers++;
+			spinlock_unlock(lock->mutex);
+			return;
+		}
+		spinlock_unlock(lock->mutex);
+	}
 }
 
 void
 rw_read_unlock(struct read_write_lock * lock)
 {
-    /* Implement this */
+	spinlock_lock(lock->mutex);
+	lock->num_readers--;
+	spinlock_unlock(lock->mutex);
 }
 
 void
 rw_write_lock(struct read_write_lock * lock)
 {
-    /* Implement this */
+	spinlock_lock(lock->w_mutex);
+	spinlock_lock(lock->mutex);	// in case readers are grabbing 'writer' val now
+	lock->writer = 1;		// ensure 'writer' is 1. Readers will cease to enter
+	spinlock_unlock(lock->mutex);	// release mutex so readers can leave
+	while(lock->num_readers>0);	// spin while readers finish
 }
 
 
 void
 rw_write_unlock(struct read_write_lock * lock)
 {
-    /* Implement this */
+	lock->writer = 0;
+	spinlock_unlock(lock->w_mutex);
 }
 
 
@@ -167,36 +193,63 @@ compare_and_swap_ptr(uintptr_t * ptr,
 		     uintptr_t   expected,
 		     uintptr_t   new)
 {
-    /* Implement this */
-}
-
+	uintptr_t original;
+	asm ("lock cmpxchgq %3, %0;\n" : "+m" (*ptr), "=a" (original) : "1" (expected), "r" (new));
+	return original;
+} 
 
 
 void
 lf_queue_init(struct lf_queue * queue)
 {
-    /* Implement this */
+	queue->head = malloc(sizeof(struct node));
+	queue->tail = malloc(sizeof(struct node));
+	queue->head->next = NULL;
+	queue->tail->next = NULL;
 }
 
 void
 lf_queue_deinit(struct lf_queue * lf)
 {
-    /* Implement this */
+	lf = NULL; // doesn't garbage collector take care of the rest?
 }
 
 void
 lf_enqueue(struct lf_queue * queue,
 	   int               val)
 {
-    /* Implement this */
+	struct node *q = malloc(sizeof(struct node)), *p;
+	//uintptr_t addrs_of_tail, addrs_of_p, addrs_of_next;
+	q->value = val;
+	q->next  = NULL;
+	int succ = 0;
+	while(succ==0) {
+		p = queue->tail;
+		compare_and_swap_ptr((uintptr_t*)&(p->next), (uintptr_t)NULL, (uintptr_t)q);
+		succ = (q==p->next);
+		if(succ==0)			 	// elim this `if`
+			compare_and_swap_ptr((uintptr_t*)&(queue->tail), (uintptr_t)p, (uintptr_t)(p->next));
+	}
+	compare_and_swap_ptr((uintptr_t*)&(queue->tail), (uintptr_t)p, (uintptr_t)q); // not needed it ^ `if` is gone
 }
 
 int
 lf_dequeue(struct lf_queue * queue,
 	   int             * val)
 {
-    /* Implement this */
-    return 0;
+	int succ = 0;
+	struct node *p;
+	uintptr_t oldhead;
+	while(succ==0) {	
+		p = queue->head;
+		if(p->next == NULL) {
+			return 0;
+		}
+		oldhead = compare_and_swap_ptr((uintptr_t*)&(queue->head), (uintptr_t)p, (uintptr_t)(p->next));
+		succ = (((struct node*)oldhead)->next == p->next); // both local vars. no danger. 
+		*val = p->next->value;
+	}
+	return 1;
 }
 
 
