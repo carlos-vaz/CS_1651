@@ -134,42 +134,32 @@ rw_lock_init(struct read_write_lock * lock)
 void
 rw_read_lock(struct read_write_lock * lock)
 {
-	while(1) {
-		while(lock->writer==1);	// most spinning done here
-		spinlock_lock(lock->mutex);
-		if(lock->writer==0) { 	// high probability it will be 0
-			lock->num_readers++;
-			spinlock_unlock(lock->mutex);
-			return;
-		}
-		spinlock_unlock(lock->mutex);
-	}
+	spinlock_lock(lock->mutex);
+	while(lock->writer);
+	lock->num_readers++;
+	spinlock_unlock(lock->mutex);
 }
 
 void
 rw_read_unlock(struct read_write_lock * lock)
 {
-	spinlock_lock(lock->mutex);
-	lock->num_readers--;
-	spinlock_unlock(lock->mutex);
+	atomic_sub(&(lock->mutex), 1);
 }
 
 void
 rw_write_lock(struct read_write_lock * lock)
 {
-	spinlock_lock(lock->w_mutex);
-	spinlock_lock(lock->mutex);	// in case readers are grabbing 'writer' val now
-	lock->writer = 1;		// ensure 'writer' is 1. Readers will cease to enter
-	spinlock_unlock(lock->mutex);	// release mutex so readers can leave
-	while(lock->num_readers>0);	// spin while readers finish
+	spinlock_lock(lock->mutex);
+	while(lock->writer || lock->num_readers>0);
+	lock->writer = 1;
+	spinlock_unlock(lock->mutex);
 }
 
 
 void
 rw_write_unlock(struct read_write_lock * lock)
 {
-	lock->writer = 0;
-	spinlock_unlock(lock->w_mutex);
+	atomic_sub(&(lock->writer), 1);
 }
 
 
@@ -211,7 +201,7 @@ lf_queue_init(struct lf_queue * queue)
 void
 lf_queue_deinit(struct lf_queue * lf)
 {
-	lf = NULL; // doesn't garbage collector take care of the rest?
+	// TODO: c has no garbage collector
 }
 
 void
@@ -226,6 +216,7 @@ lf_enqueue(struct lf_queue * queue,
 	while(succ==0) {
 		p = queue->tail;
 		compare_and_swap_ptr((uintptr_t*)&(p->next), (uintptr_t)NULL, (uintptr_t)q);
+		// TODO: q and p may have been freed by dequeueing thread! 
 		succ = (q==p->next);
 		if(succ==0)			 	// elim this `if`
 			compare_and_swap_ptr((uintptr_t*)&(queue->tail), (uintptr_t)p, (uintptr_t)(p->next));
