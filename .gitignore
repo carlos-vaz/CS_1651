@@ -1,5 +1,9 @@
 
-*.ko
-*.o
-*.swp
+# Ignore everything...
+*
 
+# Except these... 
+!.gitignore
+!Makefile
+!*.c
+!*.h
