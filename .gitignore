@@ -4,6 +4,6 @@
 
 # Except these... 
 !.gitignore
-!Makefile
-!*.c
-!*.h
+!**/Makefile
+!**/*.c
+!**/*.h
