@@ -2,9 +2,10 @@
 # Ignore everything...
 *
 
+# Except Directories
 !*/
 
-# Except these... 
+# And any of these... 
 !.gitignore
 !**/Makefile
 !**/*.c
