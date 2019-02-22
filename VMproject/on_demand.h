@@ -15,9 +15,11 @@
 
 
 struct mem_map {
-    /* Fill this in */
+	struct list_head * map_list;
+	unsigned long start;
+	unsigned long size;
+	int allocated;
 };
-
 
 
 struct mem_map * petmem_init_process(void);
