@@ -231,7 +231,7 @@ static long petmem_ioctl(struct file * filp,
 
 static int petmem_open(struct inode * inode, struct file * filp) {
 
-    
+    printk("Entered petmem_open...Calling petmem_init_process...\n");
     filp->private_data = petmem_init_process();
     
     return 0;
