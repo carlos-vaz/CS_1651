@@ -107,6 +107,7 @@ init_petmem(void)
 
     printf("Calling open()...\n");	
     fd = open(dev_file, O_RDONLY);
+    printf("Returned from open()...\n");	
 
     
     if (fd == -1) {
