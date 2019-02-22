@@ -105,7 +105,7 @@ init_petmem(void)
     
     sigaction(SIGSEGV, &action, &dfl_segv_action);
 
-
+    printk("Calling open()...\n");	
     fd = open(dev_file, O_RDONLY);
 
     
