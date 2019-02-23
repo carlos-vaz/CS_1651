@@ -17,10 +17,10 @@
 struct mem_map *
 petmem_init_process(void)
 {
-	struct mem_map * this_map = kmalloc(sizeof(struct mem_map), GFP_KERNEL);
+	/*struct mem_map * this_map = kmalloc(sizeof(struct mem_map), GFP_KERNEL);
 	INIT_LIST_HEAD(this_map->map_list);
 	return this_map;
-}
+*/}
 
 
 void

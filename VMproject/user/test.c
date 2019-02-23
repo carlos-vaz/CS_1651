@@ -16,6 +16,8 @@ int main(int argc, char ** argv) {
 
     buf = pet_malloc(8192);
 
+	printf("buf addrs: %p\n", buf);
+/*
     printf("Allocated 1 page at %p\n", buf);
 
     pet_dump();
@@ -42,6 +44,7 @@ int main(int argc, char ** argv) {
 
     printf("%s\n", (char *)(buf + 50));
 
-    
+*/    
     return 0;
+
 }
