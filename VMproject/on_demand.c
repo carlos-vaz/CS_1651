@@ -93,7 +93,7 @@ petmem_handle_pagefault(struct mem_map * map,
 	int pdp_index =  (int)PDPE64_INDEX(fault_addr);
 	printk("PDPE64 Index = %d\n", pdp_index);
 
-	// VA --> PDPE64 Index
+	// VA --> PDE64 Index
 	int pde_index =  (int)PDE64_INDEX(fault_addr);
 	printk("PDE64 Index =  %d\n", pde_index);
 
@@ -115,7 +115,7 @@ petmem_handle_pagefault(struct mem_map * map,
 	void * v_pml_dest = v_cr3 + pml_index;
 	printk("PML Table + PML Index (virtual) = %lx\n", v_pml_dest);
 	printk("Dereferencing...\n");
-	unsigned long pml_dest_data = * (unsigned long *)v_pml_dest;
+	pdpe64 pml_dest_data = * (pdpe64 *)v_pml_dest;
 	printk("PML entry data = %lx \n", pml_dest_data);
 
 
