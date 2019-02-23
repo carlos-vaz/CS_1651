@@ -77,7 +77,7 @@ petmem_handle_pagefault(struct mem_map * map,
 			u32              error_code)
 {
 	printk("Page fault! At address\t %lx\n", fault_addr);
-	printk("Map start:\t %lx\n", map->start);
+	printk("Map start:\t\t %lx\n", map->start);
 	// Ask buddy for page
 	uintptr_t assigned = petmem_alloc_pages(1);
 	printk("Buddy assigned %lx \n", assigned);
