@@ -92,6 +92,7 @@ static long petmem_ioctl(struct file * filp,
 
     switch (ioctl) {
 	case ADD_MEMORY: {
+	    printk("ioctl ADD_MEMORY\n");
 	    struct memory_range reg;
 	    int                 reg_order = 0;
 	    uintptr_t           base_addr = 0;        
@@ -138,6 +139,7 @@ static long petmem_ioctl(struct file * filp,
 
 
 	case LAZY_ALLOC: {
+	    printk("ioctl LAZY_ALLOC\n");
 	    struct alloc_request req;
 	    
 	    struct mem_map * map = filp->private_data;
@@ -173,6 +175,7 @@ static long petmem_ioctl(struct file * filp,
 	}
 
 	case LAZY_FREE: {
+	    printk("ioctl LAZY_FREE\n");
 	    uintptr_t addr = (uintptr_t)arg;
 	    struct mem_map * map = filp->private_data;
 
@@ -183,6 +186,7 @@ static long petmem_ioctl(struct file * filp,
 	}
 
 	case LAZY_DUMP_STATE: {
+	    printk("ioctl LAZY_DUMP_STATE\n");
 	    struct mem_map * map = filp->private_data;
 
 	    petmem_dump_vspace(map);
@@ -190,6 +194,7 @@ static long petmem_ioctl(struct file * filp,
 	}
 	    
 	case PAGE_FAULT: {
+	    printk("ioctl PAGE_FAULT\n");
 	    struct page_fault fault;
 	    struct mem_map * map = filp->private_data;
 
@@ -213,6 +218,7 @@ static long petmem_ioctl(struct file * filp,
 	}
 
 	case INVALIDATE_PAGE: {
+	    printk("ioctl INVALIDATE_PAGE\n");
 	    uintptr_t addr = (uintptr_t)arg;
 	    invlpg(PAGE_ADDR(addr));
 	    break;
