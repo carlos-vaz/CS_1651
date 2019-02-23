@@ -52,7 +52,7 @@ petmem_alloc_pages(u64 num_pages)
     
     if (paddr) {
 //       printk("Allocated %llu pages at %p\n", num_pages, (void *)paddr);
-       printk("Allocated %llu pages at %lx\n", num_pages, paddr);
+       printk("Allocated %llu pages at %lx\n", num_pages, (void *)paddr);
     } else {
        printk("Failed to allocate %llu pages\n", num_pages);
     }
