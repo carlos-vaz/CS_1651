@@ -11,16 +11,9 @@ int main(int argc, char ** argv) {
 //    void * addr = pet_malloc((size_t)4096);
 
     char * buf = NULL;
-
-    char * buf_mall = NULL; 
-
-    buf_mall = malloc(8192);
-    buf_mall[50] = 'y';
-
-
     buf = pet_malloc(8192);
 
-	printf("buf addrs: %p\n", buf);
+    printf("buf addrs: %p\n", buf);
 
     //printf("Allocated 1 page at %p\n", buf);
 

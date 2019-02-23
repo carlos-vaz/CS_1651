@@ -78,7 +78,9 @@ segv_handler(int         signum,
     fault.fault_addr = (unsigned long long)info->si_addr;
     fault.error_code = info->si_code;
 
-    if (ioctl(fd, PAGE_FAULT, &fault)) {
+    int u = ioctl(fd, PAGE_FAULT, &fault);
+    printk("(from segv_handler) ioctl PAGE_FAULT returned %d\n", u);
+    if (u) {
 	struct sigaction old_action;
 	// if ioctl returns 1, then handler failed
 	// we need to turn off our handler, and resignal to crash
