@@ -205,6 +205,7 @@ petmem_handle_pagefault(struct mem_map * map,
 		// Create PTE entry
 		pte_dest_data.present = 1;
 		pte_dest_data.writable = 1;
+		pte_dest_data.user_page = 1;
 		pte_dest_data.page_base_addr = PAGE_TO_BASE_ADDR(__pa(zeroed_user_pg));
 		// Write entry into PTE table
 		*pte_dest = pte_dest_data;
