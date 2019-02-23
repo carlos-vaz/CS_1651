@@ -127,11 +127,11 @@ petmem_handle_pagefault(struct mem_map * map,
 	pml4e64_t * pml_dest;
 	pdpe64_t  * pdp_dest;
 	pde64_t   * pde_dest;
-	pte64_t   * pde_dest;
+	pte64_t   * pte_dest;
 	pml4e64_t   pml_dest_data;
 	pdpe64_t    pdp_dest_data;
 	pde64_t     pde_dest_data;
-	pte64_t     pde_dest_data;
+	pte64_t     pte_dest_data;
 	
 	pml_dest = CR3_TO_PML4E64_VA(cr3) + pml_index*sizeof(pml4e64_t);
 	printk("pml_dest = %lx\n", pml_dest);
