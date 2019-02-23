@@ -115,7 +115,7 @@ petmem_handle_pagefault(struct mem_map * map,
 	void * v_pml_dest = v_cr3 + pml_index;
 	printk("PML Table + PML Index (virtual) = %lx\n", v_pml_dest);
 	printk("Dereferencing...\n");
-	pdpe64 pml_dest_data = * (pdpe64 *)v_pml_dest;
+	pdpe64_t pml_dest_data = * (pdpe64_t *)v_pml_dest;
 	printk("PML entry data = %lx \n", pml_dest_data);
 
 
