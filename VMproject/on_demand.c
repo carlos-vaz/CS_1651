@@ -146,6 +146,7 @@ petmem_handle_pagefault(struct mem_map * map,
 	printk("pml_dest = %lx\n", pml_dest);
 	printk("pml_dest->present = %d\n", pml_dest->present);
 	if(pml_dest->present == 0) {
+		printk("NOT PRESENT... WRITING\n");
 		// Allocate page for PDP table
 		pdp_table_pg = __get_free_page(GFP_KERNEL);
 		printk("Received page for pdp table @ %lx\n", pdp_table_pg);
@@ -154,8 +155,6 @@ petmem_handle_pagefault(struct mem_map * map,
 		pml_dest_data.writable = 1;
 		pml_dest_data.user_page = 1;
 		pml_dest_data.pdp_base_addr = PAGE_TO_BASE_ADDR(__pa(pdp_table_pg));
-
-	
 	}
 	// Write entry into PML table
 	*pml_dest = pml_dest_data;

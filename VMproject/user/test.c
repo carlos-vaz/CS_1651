@@ -28,8 +28,8 @@ int main(int argc, char ** argv) {
 
 
     buf[50] = 'H';
- /*   buf[51] = 'e';
-    buf[52] = 'l';
+    buf[51] = 'e';
+ /*   buf[52] = 'l';
     buf[53] = 'l';
     buf[54] = 'o';
     buf[55] = ' ';
