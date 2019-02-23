@@ -121,9 +121,9 @@ petmem_handle_pagefault(struct mem_map * map,
 	//printk("PML entry data = %lx \n", pml_dest_data);
 
 
-	pml4e64_t * pml_dest;
+	/*pml4e64_t * pml_dest;
 	pml_dest = 
-
+		*/
 	
 
 	return -1;
