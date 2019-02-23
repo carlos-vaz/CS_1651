@@ -83,7 +83,7 @@ petmem_handle_pagefault(struct mem_map * map,
 	printk("Buddy assigned %lx \n", assigned);
 
 	// Map the page into page tables
-	//assigned = 0x
+	assigned = 0xffff93efffffffff;
 
 	// VA --> PML4E64 Index
 	int pml_index =  (int)PML4E64_INDEX(fault_addr);
