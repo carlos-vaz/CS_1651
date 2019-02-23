@@ -53,7 +53,7 @@ petmem_alloc_pages(u64 num_pages)
     if (paddr) {
 	// TODO: Why are these two statements printing values for paddr?
        printk("Allocated %llu pages at %p\n", num_pages, (void *)paddr);
-       printk("Allocated %llu pages at %lx\n", num_pages, (void *)paddr);
+       printk("--> Allocated %llu pages at %lx\n", num_pages, (void *)paddr);
     } else {
        printk("Failed to allocate %llu pages\n", num_pages);
     }
@@ -202,7 +202,7 @@ static long petmem_ioctl(struct file * filp,
 	    
 	    if (petmem_handle_pagefault(map, (uintptr_t)fault.fault_addr, (u32)fault.error_code) != 0) {
 		printk("error handling page fault for Addr:%p (error=%d)\n", (void *)fault.fault_addr, fault.error_code);
-		printk("error handling page fault for Addr:%lx (error=%d)\n", (void *)fault.fault_addr, fault.error_code);
+		printk("--> error handling page fault for Addr:%lx (error=%d)\n", (void *)fault.fault_addr, fault.error_code);
 		return 1;
 	    }
 
