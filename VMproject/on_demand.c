@@ -12,12 +12,12 @@
 
 
 
-//LIST_HEAD(mem_map->map_list);
 
 struct mem_map *
 petmem_init_process(void)
 {
 	struct mem_map * this_map = kmalloc(sizeof(struct mem_map), GFP_KERNEL);
+	this_map->allocated = 0;
 	//INIT_LIST_HEAD(this_map->map_list);
 	return this_map;
   //return NULL;
@@ -35,9 +35,15 @@ uintptr_t
 petmem_alloc_vspace(struct mem_map * map,
 		    u64              num_pages)
 {
-    printk("Memory allocation\n");
-
-    return 0;
+	printk("Memory allocation\n");
+	if (mem_map->allocated==1) {
+		printk("mem_map already allocated! Can only pet_malloc once for now...\n");
+		return 0;
+	}
+	map->start = PETMEM_REGION_START;
+	map->size = num_pages*PAGE_SIZE_4KB;
+	map->allocated = 1;
+    return (uintptr_t)(map->start);
 }
 
 void
