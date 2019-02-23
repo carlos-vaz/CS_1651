@@ -12,7 +12,11 @@ int main(int argc, char ** argv) {
 
     char * buf = NULL;
 
-    
+    char * buf_mall = NULL; 
+
+    buf_mall = malloc(8192);
+    buf_mall[50] = 'y';
+
 
     buf = pet_malloc(8192);
 
