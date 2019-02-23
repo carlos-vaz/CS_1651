@@ -111,7 +111,7 @@ petmem_handle_pagefault(struct mem_map * map,
 	printk("PTE64 Index =  %d\n", pte_index);
 	
 
-	// Walk to PML
+/*	// Walk to PML
 	void * v_cr3 = __va(cr3);
 	printk("(Suspected wrong) Virtual cr3 (addrs of PML table) = %lx\n", v_cr3);
 	v_cr3 =  CR3_TO_PML4E64_VA(cr3);
@@ -122,7 +122,7 @@ petmem_handle_pagefault(struct mem_map * map,
 	pml4e64_t * pml_dest_data = (pml4e64_t *)v_pml_dest;
 	printk("pml_dest->present = %d\n", pml_dest_data->present);
 	//printk("PML entry data = %lx \n", pml_dest_data);
-
+*/
 	printk("------- Corrections ------\n");
 	pml4e64_t * pml_dest;
 	pdpe64_t  * pdp_dest;
