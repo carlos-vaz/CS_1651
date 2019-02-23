@@ -81,6 +81,7 @@ segv_handler(int         signum,
     int u = ioctl(fd, PAGE_FAULT, &fault);
     printf("(from segv_handler) ioctl PAGE_FAULT returned %d\n", u);
     if (u) {
+	printf("u 'was' (not 0)'\n");
 	struct sigaction old_action;
 	// if ioctl returns 1, then handler failed
 	// we need to turn off our handler, and resignal to crash
