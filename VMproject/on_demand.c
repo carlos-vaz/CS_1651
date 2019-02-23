@@ -95,7 +95,7 @@ petmem_handle_pagefault(struct mem_map * map,
 	//fault_addr = CR3_TO_PML4E64_VA(cr3);
 	//fault_addr = 0xffff93efffffffff;
 	fault_addrr = kmalloc(12, GFP_KERNEL);
-	fault_addr = (char *)fault_addrr;
+	char * fault_addr = (char *)fault_addrr;
 	fault_addr[0] = '1';
 	
 	// VA --> PML4E64 Index
