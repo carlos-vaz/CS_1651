@@ -79,7 +79,7 @@ segv_handler(int         signum,
     fault.error_code = info->si_code;
 
     int u = ioctl(fd, PAGE_FAULT, &fault);
-    printk("(from segv_handler) ioctl PAGE_FAULT returned %d\n", u);
+    printf("(from segv_handler) ioctl PAGE_FAULT returned %d\n", u);
     if (u) {
 	struct sigaction old_action;
 	// if ioctl returns 1, then handler failed
