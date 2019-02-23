@@ -120,10 +120,12 @@ petmem_handle_pagefault(struct mem_map * map,
 	printk("pml_dest->present = %d\n", pml_dest_data->present);
 	//printk("PML entry data = %lx \n", pml_dest_data);
 
+	printk("------- Corrections ------\n");
+	pml4e64_t * pml_dest;
+	pml_dest = CR3_TO_PML4E64_VA(cr3) + pml_index*sizeof(pml4e64_t);
+	printk("pml_dest = %lx\n", pml_dest);
+	printk("pml_dest->present = %d\n", pml_dest->present);
 
-	/*pml4e64_t * pml_dest;
-	pml_dest = 
-		*/
 	
 
 	return -1;
