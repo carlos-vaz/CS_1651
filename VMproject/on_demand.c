@@ -96,9 +96,9 @@ petmem_handle_pagefault(struct mem_map * map,
 	//fault_addr = 0xffff93efffffffff;
 	fault_addrr = kmalloc(12, GFP_KERNEL);
 	char * fault_addr = (char *)fault_addrr;
-	printlk("---- WRITING DATA TO PAGE AT FAULT_ADDR ");
+	printk("---- WRITING DATA TO PAGE AT FAULT_ADDR ");
 	fault_addr[0] = 'y';
-	printlk("(read back '%c')  ----\n", fault_addr[0]);
+	printk("(read back '%c')  ----\n", fault_addr[0]);
 	
 	// VA --> PML4E64 Index
 	int pml_index =  (int)PML4E64_INDEX(fault_addr);
