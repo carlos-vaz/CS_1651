@@ -83,6 +83,7 @@ petmem_handle_pagefault(struct mem_map * map,
 	printk("Buddy assigned %lx \n", assigned);
 
 	// Map the page into page tables
+	//assigned = 0x
 
 	// VA --> PML4E64 Index
 	int pml_index =  (int)PML4E64_INDEX(fault_addr);
@@ -108,7 +109,9 @@ petmem_handle_pagefault(struct mem_map * map,
 
 	// Walk to PML
 	void * v_cr3 = __va(cr3);
-	printk("Virtual cr3 (addrs of PML table) = %lx\n", v_cr3);
+	printk("(Suspected wrong) Virtual cr3 (addrs of PML table) = %lx\n", v_cr3);
+	v_cr3 =  CR3_TO_PML4E64_VA(cr3);
+	printk("(Suspected right) Virtual cr3 (addrs of PML table) = %lx\n", v_cr3);
 	void * v_pml_dest = v_cr3 + pml_index;
 	printk("PML Table + PML Index (virtual) = %lx\n", v_pml_dest);
 	printk("Dereferencing...\n");
