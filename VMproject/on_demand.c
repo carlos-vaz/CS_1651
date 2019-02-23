@@ -141,25 +141,76 @@ petmem_handle_pagefault(struct mem_map * map,
 	unsigned long pdp_table_pg;
 	unsigned long pde_table_pg;
 	unsigned long pte_table_pg;
+	unsigned long zeroed_user_pg;
 	
 	pml_dest = CR3_TO_PML4E64_VA(cr3) + pml_index*sizeof(pml4e64_t);
 	printk("pml_dest = %lx\n", pml_dest);
 	printk("pml_dest->present = %d\n", pml_dest->present);
 	if(pml_dest->present == 0) {
-		printk("NOT PRESENT... WRITING\n");
+		printk("PDP TABLE PAGE NOT PRESENT... WRITING\n");
 		// Allocate page for PDP table
 		pdp_table_pg = __get_free_page(GFP_KERNEL);
 		printk("Received page for pdp table @ %lx\n", pdp_table_pg);
 		// Create PML entry
 		pml_dest_data.present = 1;
 		pml_dest_data.writable = 1;
-		pml_dest_data.user_page = 1;
 		pml_dest_data.pdp_base_addr = PAGE_TO_BASE_ADDR(__pa(pdp_table_pg));
+		// Write entry into PML table
+		*pml_dest = pml_dest_data;
+		printk("PML Entry: present = %d\n", pml_dest->present);
+		printk("PML Entry: pdp_base_addr = %lx\n", pml_dest->pdp_base_addr);
 	}
-	// Write entry into PML table
-	*pml_dest = pml_dest_data;
-	printk("PML Entry: present = %d\n", pml_dest->present);
-	printk("PML Entry: pdp_base_addr = %lx\n", pml_dest->pdp_base_addr);
+	pdp_dest = __va(BASE_TO_PAGE_ADDR(pml_dest->pdp_base_addr)) + pdp_index*sizeof(pdpe64_t);
+	printk("pdp_dest = %lx\n", pdp_dest);
+	printk("pdp_dest->present = %d\n", pdp_dest->present);
+	if(pdp_dest->present == 0) {		
+		printk("PDE TABLE PAGE NOT PRESENT... WRITING\n");
+		// Allocate page for PDE table
+		pde_table_pg = __get_free_page(GFP_KERNEL);
+		printk("Received page for pde table @ %lx\n", pde_table_pg);	
+		// Create PDP entry
+		pdp_dest_data.present = 1;
+		pdp_dest_data.writable = 1;
+		pdp_dest_data.pd_base_addr = PAGE_TO_BASE_ADDR(__pa(pde_table_pg));
+		// Write entry into PDP table
+		*pdp_dest = pdp_dest_data;
+		printk("PDP Entry: present = %d\n", pdp_dest->present);
+		printk("PDP Entry: pd_base_addr = %lx\n", pdp_dest->pd_base_addr);
+	}
+	pde_dest = __va(BASE_TO_PAGE_ADDR(pdp_dest->pd_base_addr)) + pde_index*sizeof(pde64_t);
+	printk("pde_dest = %lx\n", pde_dest);
+	printk("pde_dest->present = %d\n", pde_dest->present);
+	if(pde_dest->present == 0) {
+		printk("PTE TABLE PAGE NOT PRESENT... WRITING\n");
+		// Allocate page for PTE table
+		pte_table_pg = __get_free_page(GFP_KERNEL);
+		printk("Received page for pte table @ %lx\n", pte_table_pg);	
+		// Create PDE entry
+		pde_dest_data.present = 1;
+		pde_dest_data.writable = 1;
+		pde_dest_data.pt_base_addr = PAGE_TO_BASE_ADDR(__pa(pte_table_pg));
+		// Write entry into PDE table
+		*pde_dest = pde_dest_data;
+		printk("PDE Entry: present = %d\n", pde_dest->present);
+		printk("PDE Entry: pt_base_addr = %lx\n", pde_dest->pt_base_addr);
+	}
+	pte_dest = __va(BASE_TO_PAGE_ADDR(pde_dest->pt_base_addr)) + pte_index*sizeof(pte64_t);
+	printk("pte_dest = %lx\n", pte_dest);
+	printk("pte_dest->present = %d\n", pte_dest->present);
+	if(pte_dest->present == 0) {
+		printk("USER ACCESSED PAGE NOT PRESENT... WRITING\n");
+		// Allocate ZEROED! page for user
+		zeroed_user_pg = __get_zeroed_page(GFP_KERNEL);
+		printk("Received ZEROED page for user @ %lx\n", zeroed_user_pg);
+		// Create PTE entry
+		pte_dest_data.present = 1;
+		pte_dest_data.writable = 1;
+		pte_dest_data.page_base_addr = PAGE_TO_BASE_ADDR(__pa(zeroed_user_pg));
+		// Write entry into PTE table
+		*pte_dest = pte_dest_data;
+		printk("PTE Entry: present = %d\n", pte_dest->present);
+		printk("PTE Entry: page_base_addr = %lx\n", pte_dest->page_base_addr);
+	}
 
 	return -1;
 }
