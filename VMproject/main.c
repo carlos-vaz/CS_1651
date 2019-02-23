@@ -214,6 +214,7 @@ static long petmem_ioctl(struct file * filp,
 
 
 	    // 0 == success
+	    printk("ioctl PAGE_FAULT returning 0 (success!)\n");
 	    return 0;
 	}
 
