@@ -36,7 +36,7 @@ petmem_alloc_vspace(struct mem_map * map,
 		    u64              num_pages)
 {
 	printk("Memory allocation\n");
-	if (mem_map->allocated==1) {
+	if (map->allocated==1) {
 		printk("mem_map already allocated! Can only pet_malloc once for now...\n");
 		return 0;
 	}
