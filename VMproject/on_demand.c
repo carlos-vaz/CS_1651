@@ -94,11 +94,11 @@ petmem_handle_pagefault(struct mem_map * map,
 	// Different experiments for values of fault_addr
 	//fault_addr = CR3_TO_PML4E64_VA(cr3);
 	//fault_addr = 0xffff93efffffffff;
-	fault_addrr = kmalloc(12, GFP_KERNEL);
+	/*fault_addrr = kmalloc(12, GFP_KERNEL);
 	char * fault_addr = (char *)fault_addrr;
 	printk("---- WRITING DATA TO PAGE AT FAULT_ADDR ");
 	fault_addr[0] = 'y';
-	printk("(read back '%c')  ----\n", fault_addr[0]);
+	printk("(read back '%c')  ----\n", fault_addr[0]);*/
 	
 	// VA --> PML4E64 Index
 	int pml_index =  (int)PML4E64_INDEX(fault_addr);
@@ -138,20 +138,30 @@ petmem_handle_pagefault(struct mem_map * map,
 	pdpe64_t    pdp_dest_data;
 	pde64_t     pde_dest_data;
 	pte64_t     pte_dest_data;
+	unsigned long pdp_table_pg;
+	unsigned long pde_table_pg;
+	unsigned long pte_table_pg;
 	
 	pml_dest = CR3_TO_PML4E64_VA(cr3) + pml_index*sizeof(pml4e64_t);
 	printk("pml_dest = %lx\n", pml_dest);
 	printk("pml_dest->present = %d\n", pml_dest->present);
 	if(pml_dest->present == 0) {
+		// Allocate page for PDP table
+		pdp_table_pg = __get_free_page(GFP_KERNEL);
+		printk("Received page for pdp table @ %lx\n", pdp_table_pg);
 		// Create PML entry
 		pml_dest_data.present = 1;
 		pml_dest_data.writable = 1;
 		pml_dest_data.user_page = 1;
 		pml_dest_data.user_page = 1;
-
+		pdp_base_addr = PAGE_TO_BASE_ADDR(__pa(pdp_table_pg));
 
 	
 	}
+	// Write entry into PML table
+	*pml_dest = pml_dest_data;
+	printk("PML Entry: present = %d\n", pml_dest->present);
+	printk("PML Entry: pdp_base_addr = %lx\n", pml_dest->pdp_base_addr);
 
 	return -1;
 }
