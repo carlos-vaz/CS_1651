@@ -108,7 +108,7 @@ petmem_handle_pagefault(struct mem_map * map,
 
 	// Walk to PML
 	uintptr_t v_cr3 = __va(cr3);
-	printk("Virtual cr3 (addrs of PML table) = %lx\n", c_cr3);
+	printk("Virtual cr3 (addrs of PML table) = %lx\n", v_cr3);
 
 	
 
