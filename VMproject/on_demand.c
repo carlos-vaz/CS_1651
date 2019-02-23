@@ -105,8 +105,8 @@ petmem_handle_pagefault(struct mem_map * map,
 	// Grab cr3
 	uintptr_t cr3 = get_cr3();
 	printk("CR3 = %lx\n", cr3);
-	cr3 = CR3_TO_PML4E64_PA(cr3);
-	printk("CR3_TO_PML4E64_PA(CR3) = %lx\n", cr3);
+	//cr3 = CR3_TO_PML4E64_PA(cr3);
+	//printk("CR3_TO_PML4E64_PA(CR3) = %lx\n", cr3);
 
 	// Walk to PML
 	void * v_cr3 = __va(cr3);
@@ -120,6 +120,9 @@ petmem_handle_pagefault(struct mem_map * map,
 	printk("pml_dest->present = %d\n", pml_dest_data->present);
 	//printk("PML entry data = %lx \n", pml_dest_data);
 
+
+	pml4e64_t * pml_dest;
+	pml_dest = 
 
 	
 
