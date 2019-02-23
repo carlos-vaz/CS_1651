@@ -84,27 +84,32 @@ petmem_handle_pagefault(struct mem_map * map,
 
 	// Map the page into page tables
 
-	// Grab cr3
-	uintptr_t cr3 = get_cr3();
-	printk("CR3 = %lx\n", cr3);
-	cr3 = CR3_TO_PML4E64_PA(cr3);
-	printk("CR3_TO_PML4E64_PA(CR3) = %lx\n", cr3);
-
 	// VA --> PML4E64 Index
 	int pml_index =  (int)PML4E64_INDEX(fault_addr);
 	printk("PML4E64 Index = %d\n", pml_index);
 
-	// VA --> PDPE64 Index Index
+	// VA --> PDPE64 Index
 	int pdp_index =  (int)PDPE64_INDEX(fault_addr);
 	printk("PDPE64 Index = %d\n", pdp_index);
 
-	// VA --> PDPE64 Index Index
+	// VA --> PDPE64 Index
 	int pde_index =  (int)PDE64_INDEX(fault_addr);
 	printk("PDE64 Index =  %d\n", pde_index);
 
 	// VA --> PTE64 Index
 	int pte_index =  (int)PTE64_INDEX(fault_addr);
 	printk("PTE64 Index =  %d\n", pte_index);
+	
+	// Grab cr3
+	uintptr_t cr3 = get_cr3();
+	printk("CR3 = %lx\n", cr3);
+	cr3 = CR3_TO_PML4E64_PA(cr3);
+	printk("CR3_TO_PML4E64_PA(CR3) = %lx\n", cr3);
+
+	// Walk to PML
+	uintptr_t v_cr3 = __va(cr3);
+	printk("Virtual cr3 (addrs of PML table) = %lx\n", c_cr3);
+
 	
 
 	return -1;
