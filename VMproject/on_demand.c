@@ -73,10 +73,10 @@ petmem_free_vspace(struct mem_map * map,
 
 int
 petmem_handle_pagefault(struct mem_map * map,
-			uintptr_t        fault_addr,
+			uintptr_t        fault_addrr,
 			u32              error_code)
 {
-	printk("Page fault! At address\t %lx\n", fault_addr);
+	printk("Page fault! At address\t %lx\n", fault_addrr);
 	printk("Map start:\t\t %lx\n", map->start);
 	// Ask buddy for page
 	uintptr_t assigned = petmem_alloc_pages(1);
@@ -94,9 +94,10 @@ petmem_handle_pagefault(struct mem_map * map,
 	// Different experiments for values of fault_addr
 	//fault_addr = CR3_TO_PML4E64_VA(cr3);
 	//fault_addr = 0xffff93efffffffff;
-	fault_addr = kmalloc(12, GFP_KERNEL);
-	(char *)(fault_addr)[0] = 'r';
-
+	fault_addrr = kmalloc(12, GFP_KERNEL);
+	fault_addr = (char *)fault_addrr;
+	fault_addr[0] = '1';
+	
 	// VA --> PML4E64 Index
 	int pml_index =  (int)PML4E64_INDEX(fault_addr);
 	printk("PML4E64 Index = %d\n", pml_index);
