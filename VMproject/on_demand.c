@@ -212,5 +212,5 @@ petmem_handle_pagefault(struct mem_map * map,
 		printk("PTE Entry: page_base_addr = %lx\n", pte_dest->page_base_addr);
 	}
 
-	return -1;
+	return 0;
 }
