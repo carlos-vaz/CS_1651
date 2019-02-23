@@ -17,14 +17,14 @@ int main(int argc, char ** argv) {
     buf = pet_malloc(8192);
 
 	printf("buf addrs: %p\n", buf);
-/*
-    printf("Allocated 1 page at %p\n", buf);
 
-    pet_dump();
+    //printf("Allocated 1 page at %p\n", buf);
+
+    //pet_dump();
 
 
     buf[50] = 'H';
-    buf[51] = 'e';
+ /*   buf[51] = 'e';
     buf[52] = 'l';
     buf[53] = 'l';
     buf[54] = 'o';
@@ -43,8 +43,8 @@ int main(int argc, char ** argv) {
     pet_free(buf);
 
     printf("%s\n", (char *)(buf + 50));
+*/   
 
-*/    
     return 0;
 
 }
