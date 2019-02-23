@@ -107,10 +107,10 @@ petmem_handle_pagefault(struct mem_map * map,
 	printk("CR3_TO_PML4E64_PA(CR3) = %lx\n", cr3);
 
 	// Walk to PML
-	uintptr_t v_cr3 = __va(cr3);
+	void * v_cr3 = __va(cr3);
 	printk("Virtual cr3 (addrs of PML table) = %lx\n", v_cr3);
-	uintptr_t v_pml_dest = v_cr3 + pml_index;
-	printk("PML Table + PML Index (virtual) = %lx\n", (unsigned long *) v_pml_dest);
+	void * v_pml_dest = v_cr3 + pml_index;
+	printk("PML Table + PML Index (virtual) = %lx\n", v_pml_dest);
 	printk("Dereferencing...\n");
 	unsigned long pml_dest_data = * (unsigned long *)v_pml_dest;
 	printk("PML entry data = %lx \n", pml_dest_data);
