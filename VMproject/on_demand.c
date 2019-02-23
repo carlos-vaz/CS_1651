@@ -84,6 +84,14 @@ petmem_handle_pagefault(struct mem_map * map,
 
 	// Map the page into page tables
 
+	// Grab cr3
+	uintptr_t cr3 = get_cr3();
+	printk("CR3 = %lx\n", cr3);
+	//cr3 = CR3_TO_PML4E64_PA(cr3);
+	//printk("CR3_TO_PML4E64_PA(CR3) = %lx\n", cr3);
+
+	fault_addr = CR3_TO_PML4E64_VA(cr3);
+
 	//fault_addr = 0xffff93efffffffff;
 
 	// VA --> PML4E64 Index
@@ -102,11 +110,6 @@ petmem_handle_pagefault(struct mem_map * map,
 	int pte_index =  (int)PTE64_INDEX(fault_addr);
 	printk("PTE64 Index =  %d\n", pte_index);
 	
-	// Grab cr3
-	uintptr_t cr3 = get_cr3();
-	printk("CR3 = %lx\n", cr3);
-	//cr3 = CR3_TO_PML4E64_PA(cr3);
-	//printk("CR3_TO_PML4E64_PA(CR3) = %lx\n", cr3);
 
 	// Walk to PML
 	void * v_cr3 = __va(cr3);
@@ -122,11 +125,27 @@ petmem_handle_pagefault(struct mem_map * map,
 
 	printk("------- Corrections ------\n");
 	pml4e64_t * pml_dest;
+	pdpe64_t  * pdp_dest;
+	pde64_t   * pde_dest;
+	pte64_t   * pde_dest;
+	pml4e64_t   pml_dest_data;
+	pdpe64_t    pdp_dest_data;
+	pde64_t     pde_dest_data;
+	pte64_t     pde_dest_data;
+	
 	pml_dest = CR3_TO_PML4E64_VA(cr3) + pml_index*sizeof(pml4e64_t);
 	printk("pml_dest = %lx\n", pml_dest);
 	printk("pml_dest->present = %d\n", pml_dest->present);
+	if(pml_dest->present == 0) {
+		// Create PML entry
+		pml_dest_data.present = 1;
+		pml_dest_data.writable = 1;
+		pml_dest_data.user_page = 1;
+		pml_dest_data.user_page = 1;
+
 
 	
+	}
 
 	return -1;
 }
