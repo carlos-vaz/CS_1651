@@ -83,6 +83,13 @@ petmem_handle_pagefault(struct mem_map * map,
 	printk("Buddy assigned %lx \n", assigned);
 
 	// Map the page into page tables
+
+	// Grab cr3
+	uintptr_t cr3 = get_cr3();
+	printk("CR3 = %lx\n", cr3);
 	
+	cr3 = CR3_TO_PML4E64_PA(cr3);
+	printk("CR3_TO_PML4E64_PA(CR3) = %lx\n", cr3);
+
 	return -1;
 }
