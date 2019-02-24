@@ -103,20 +103,20 @@ petmem_handle_pagefault(struct mem_map * map,
 	printk("(read back '%c')  ----\n", fault_addr[0]);*/
 	
 	// VA --> PML4E64 Index
-	int pml_index =  (int)PML4E64_INDEX(fault_addr);
-	printk("PML4E64 Index = %d\n", pml_index);
+	unsigned long pml_index = PML4E64_INDEX(fault_addr);
+	printk("PML4E64 Index = %lu\n", pml_index);
 
 	// VA --> PDPE64 Index
-	int pdp_index =  (int)PDPE64_INDEX(fault_addr);
-	printk("PDPE64 Index = %d\n", pdp_index);
+	unsigned long pdp_index = PDPE64_INDEX(fault_addr);
+	printk("PDPE64 Index = %lu\n", pdp_index);
 
 	// VA --> PDE64 Index
-	int pde_index =  (int)PDE64_INDEX(fault_addr);
-	printk("PDE64 Index =  %d\n", pde_index);
+	unsigned long pde_index = PDE64_INDEX(fault_addr);
+	printk("PDE64 Index =  %lu\n", pde_index);
 
 	// VA --> PTE64 Index
-	int pte_index =  (int)PTE64_INDEX(fault_addr);
-	printk("PTE64 Index =  %d\n", pte_index);
+	unsigned long pte_index = PTE64_INDEX(fault_addr);
+	printk("PTE64 Index =  %lu\n", pte_index);
 	
 
 /*	// Walk to PML
