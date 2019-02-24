@@ -164,7 +164,7 @@ petmem_handle_pagefault(struct mem_map * map,
 		*pml_dest = pml_dest_data;
 		printk("PML Entry: present = %d\n", pml_dest->present);
 		printk("PML Entry: pdp_base_addr = %lx\n", pml_dest->pdp_base_addr);
-		invlpg(__pa(pdp_tble_pg));
+		invlpg(__pa(pdp_table_pg));
 	}
 	pdp_dest = __va(BASE_TO_PAGE_ADDR(pml_dest->pdp_base_addr)) + pdp_index*sizeof(pdpe64_t);
 	printk("pdp_dest = %lx\n", pdp_dest);
