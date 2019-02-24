@@ -15,14 +15,18 @@ int main(int argc, char ** argv) {
 
     printf("buf addrs: %p\n", buf);
 
+    char * buf_malloc = malloc(4096);
+    buf_malloc[0] = 'r';
+    pass_address((void *)buf_malloc);
+
     //printf("Allocated 1 page at %p\n", buf);
 
     //pet_dump();
 
 
     buf[50] = 'H';
-    buf[51] = 'e';
- /*   buf[52] = 'l';
+ /*   buf[51] = 'e';
+    buf[52] = 'l';
     buf[53] = 'l';
     buf[54] = 'o';
     buf[55] = ' ';

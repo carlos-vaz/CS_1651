@@ -14,6 +14,7 @@
 char * dev_file = "/dev/petmem";
 #endif
 
+extern void * user_address;
 
 struct memory_range {
     unsigned long long base_addr;
