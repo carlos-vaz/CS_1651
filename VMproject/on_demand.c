@@ -218,7 +218,7 @@ petmem_handle_pagefault(struct mem_map * map,
 		printk("PTE Entry: page_base_addr = %lx\n", pte_dest->page_base_addr);
 
 		// Invalidate PTE entry in case TLB cached it
-		invlpg(__pa(zeroed_user_pg));
+		//invlpg(__pa(zeroed_user_pg));
 		
 	}
 
