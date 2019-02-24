@@ -102,7 +102,7 @@ petmem_handle_pagefault(struct mem_map * map,
 	fault_addr[0] = 'y';
 	printk("(read back '%c')  ----\n", fault_addr[0]);*/
 
-	extern void * user_address;
+	//extern void * user_address;
 	printk("user_address: %lx\n", user_address);
 	printk("(uintptr_t)user_address %lx\n", (uintptr_t)user_address);
 	fault_addr = (uintptr_t)user_address;

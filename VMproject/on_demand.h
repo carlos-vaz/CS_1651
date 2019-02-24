@@ -21,7 +21,7 @@ struct mem_map {
 	int allocated;
 };
 
-
+extern void * user_address;
 struct mem_map * petmem_init_process(void);
 void petmem_deinit_process(struct mem_map * map);
 
