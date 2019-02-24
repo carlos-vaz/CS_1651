@@ -13,11 +13,11 @@ int main(int argc, char ** argv) {
     char * buf = NULL;
     buf = pet_malloc(8192);
 
-    printf("buf addrs (\%p): %p,  (\%lx): %lx\n", buf, buf);
+    printf("buf addrs (p): %p,  (lx): %lx\n", buf, buf);
 
 	char * buf_mal = NULL;
 	buf_mal = malloc(4096);
-    printf("buf_malloc addrs (\%p): %p,  (\%lx): %lx\n", buf_mal, buf_mal);
+    printf("buf_malloc addrs (p): %p,  (lx): %lx\n", buf_mal, buf_mal);
 
 
     //printf("Allocated 1 page at %p\n", buf);
