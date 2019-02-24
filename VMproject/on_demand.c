@@ -190,7 +190,6 @@ petmem_handle_pagefault(struct mem_map * map,
    printk("(2.) pml_dest->accessed (pdp table accessed) = %d\n", pml_dest->accessed);
    pml_dest->accessed = 0;
 	pde_dest = __va(BASE_TO_PAGE_ADDR(pdp_dest->pd_base_addr)) + pde_index*sizeof(pde64_t);
-	printk("pml_dest->accessed = %d", pdp_dest->accessed);
 	printk("pde_dest = %lx\n", pde_dest);
 	printk("pde_dest->present = %d\n", pde_dest->present);
 	if(pde_dest->present == 0) {
@@ -231,6 +230,8 @@ petmem_handle_pagefault(struct mem_map * map,
 		//invlpg(__pa(zeroed_user_pg));
 		
 	}
+	printk("POST WALK: pde_dest->accessed = %d\n", pde_dest->accessed);
+	pde_dest->accessed = 0;
 
 	return 0;
 }
