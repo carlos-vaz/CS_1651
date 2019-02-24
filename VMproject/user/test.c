@@ -15,10 +15,6 @@ int main(int argc, char ** argv) {
 
     printf("buf addrs: %p\n", buf);
 
-    char * buf_malloc = malloc(4096);
-    buf_malloc[0] = 'r';
-    pass_address((void *)buf_malloc);
-
     //printf("Allocated 1 page at %p\n", buf);
 
     //pet_dump();
