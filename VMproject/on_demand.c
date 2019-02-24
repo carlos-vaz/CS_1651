@@ -145,8 +145,8 @@ petmem_handle_pagefault(struct mem_map * map,
 	unsigned long pte_table_pg;
 	unsigned long zeroed_user_pg;
 	
-	//pml_dest = CR3_TO_PML4E64_VA(cr3) + pml_index*sizeof(pml4e64_t);
-	pml_dest = __va(cr3) + pml_index*sizeof(pml4e64_t);	
+	pml_dest = CR3_TO_PML4E64_VA(cr3) + pml_index*sizeof(pml4e64_t);
+	//pml_dest = __va(cr3) + pml_index*sizeof(pml4e64_t);	
 	printk("pml_dest = %lx\n", pml_dest);
 	printk("pml_dest->present = %d\n", pml_dest->present);
    printk("(1.) pml_dest->accessed (pdp table accessed) = %d\n", pml_dest->accessed);
