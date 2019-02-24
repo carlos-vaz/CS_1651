@@ -121,9 +121,3 @@ init_petmem(void)
     return 0;
 }
 
-void pass_address(void * address) 
-{
-	user_address = address;
-}
-
-
