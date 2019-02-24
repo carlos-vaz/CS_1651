@@ -133,7 +133,7 @@ petmem_handle_pagefault(struct mem_map * map,
 */
 	printk("------- Corrections ------\n");
 	void * va_test = NULL;
-	printk("__va Test: phys: %lx, \tvirt: %lx\n", va_test, __va(test));
+	printk("__va Test: phys: %lx, \tvirt: %lx\n", va_test, __va(va_test));
 	printk("------- End of __va test ------\n");
 	pml4e64_t * pml_dest;
 	pdpe64_t  * pdp_dest;
