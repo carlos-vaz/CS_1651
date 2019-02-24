@@ -132,6 +132,9 @@ petmem_handle_pagefault(struct mem_map * map,
 	//printk("PML entry data = %lx \n", pml_dest_data);
 */
 	printk("------- Corrections ------\n");
+	void * va_test = NULL;
+	printk("__va Test: phys: %lx, \tvirt: %lx\n", va_test, __va(test));
+	printk("------- End of __va test ------\n");
 	pml4e64_t * pml_dest;
 	pdpe64_t  * pdp_dest;
 	pde64_t   * pde_dest;
@@ -144,6 +147,7 @@ petmem_handle_pagefault(struct mem_map * map,
 	unsigned long pde_table_pg;
 	unsigned long pte_table_pg;
 	unsigned long zeroed_user_pg;
+
 	
 	pml_dest = CR3_TO_PML4E64_VA(cr3) + pml_index*sizeof(pml4e64_t);
 	//pml_dest = __va(cr3) + pml_index*sizeof(pml4e64_t);	
