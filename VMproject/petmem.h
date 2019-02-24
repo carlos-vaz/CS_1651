@@ -49,7 +49,6 @@ struct page_fault {
 #define INVALIDATE_PAGE 51
 
 
-
 #ifdef __KERNEL__
 /* 128GB of virtual address space, that will hopefully be unused
    These are pulled from the user space memory region 

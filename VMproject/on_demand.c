@@ -156,7 +156,7 @@ petmem_handle_pagefault(struct mem_map * map,
 		// Create PML entry
 		pml_dest_data.present = 1;
 		pml_dest_data.writable = 1;
-		pml_dest_data.cache_disable = 1;
+		pml_dest_data.user_page = 1;
 		pml_dest_data.pdp_base_addr = PAGE_TO_BASE_ADDR(__pa(pdp_table_pg));
 		// Write entry into PML table
 		*pml_dest = pml_dest_data;
@@ -174,7 +174,7 @@ petmem_handle_pagefault(struct mem_map * map,
 		// Create PDP entry
 		pdp_dest_data.present = 1;
 		pdp_dest_data.writable = 1;
-		pdp_dest_data.cache_disable = 1;
+		pdp_dest_data.user_page = 1;
 		pdp_dest_data.pd_base_addr = PAGE_TO_BASE_ADDR(__pa(pde_table_pg));
 		// Write entry into PDP table
 		*pdp_dest = pdp_dest_data;
@@ -192,7 +192,7 @@ petmem_handle_pagefault(struct mem_map * map,
 		// Create PDE entry
 		pde_dest_data.present = 1;
 		pde_dest_data.writable = 1;
-		pde_dest_data.cache_disable = 1;
+		pde_dest_data.user_page = 1;
 		pde_dest_data.pt_base_addr = PAGE_TO_BASE_ADDR(__pa(pte_table_pg));
 		// Write entry into PDE table
 		*pde_dest = pde_dest_data;
@@ -211,7 +211,6 @@ petmem_handle_pagefault(struct mem_map * map,
 		pte_dest_data.present = 1;
 		pte_dest_data.writable = 1;
 		pte_dest_data.user_page = 1;
-		pte_dest_data.cache_disable = 1;
 		pte_dest_data.page_base_addr = PAGE_TO_BASE_ADDR(__pa(zeroed_user_pg));
 		// Write entry into PTE table
 		*pte_dest = pte_dest_data;
