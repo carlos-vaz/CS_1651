@@ -205,8 +205,9 @@ petmem_handle_pagefault(struct mem_map * map,
 	if(pte_dest->present == 0) {
 		printk("USER ACCESSED PAGE NOT PRESENT... WRITING\n");
 		// Allocate ZEROED! page for user
-		zeroed_user_pg = get_zeroed_page(GFP_KERNEL);
-		printk("Received ZEROED page for user @ %lx\n", zeroed_user_pg);
+		//zeroed_user_pg = get_zeroed_page(GFP_KERNEL);
+		zeroed_user_pg = (unsigned long)petmem_alloc_pages(1);
+		printk("Received BUDDY page for user @ %lx\n", zeroed_user_pg);
 		// Create PTE entry
 		pte_dest_data.present = 1;
 		pte_dest_data.writable = 1;
@@ -218,7 +219,7 @@ petmem_handle_pagefault(struct mem_map * map,
 		printk("PTE Entry: page_base_addr = %lx\n", pte_dest->page_base_addr);
 
 		// Invalidate PTE entry in case TLB cached it
-		//invlpg(__pa(zeroed_user_pg));
+		invlpg(__pa(zeroed_user_pg));
 		
 	}
 
