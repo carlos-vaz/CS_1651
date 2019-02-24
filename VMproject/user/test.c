@@ -11,7 +11,7 @@ int main(int argc, char ** argv) {
 //    void * addr = pet_malloc((size_t)4096);
 
     char * buf = NULL;
-    buf = pet_malloc(8192);
+    buf = pet_malloc(4096);
 
     printf("buf addrs (p): %p,  (lx): %lx\n", buf, buf);
 
