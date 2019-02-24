@@ -148,6 +148,8 @@ petmem_handle_pagefault(struct mem_map * map,
 	pml_dest = CR3_TO_PML4E64_VA(cr3) + pml_index*sizeof(pml4e64_t);
 	printk("pml_dest = %lx\n", pml_dest);
 	printk("pml_dest->present = %d\n", pml_dest->present);
+   printk("(1.) pml_dest->accessed (pdp table accessed) = %d\n", pml_dest->accessed);
+   pml_dest->accessed = 0;
 	if(pml_dest->present == 0) {
 		printk("PDP TABLE PAGE NOT PRESENT... WRITING\n");
 		// Allocate page for PDP table
@@ -181,7 +183,10 @@ petmem_handle_pagefault(struct mem_map * map,
 		printk("PDP Entry: present = %d\n", pdp_dest->present);
 		printk("PDP Entry: pd_base_addr = %lx\n", pdp_dest->pd_base_addr);
 	}
+   printk("(2.) pml_dest->accessed (pdp table accessed) = %d\n", pml_dest->accessed);
+   pml_dest->accessed = 0;
 	pde_dest = __va(BASE_TO_PAGE_ADDR(pdp_dest->pd_base_addr)) + pde_index*sizeof(pde64_t);
+	printk("pml_dest->accessed = %d", pdp_dest->accessed);
 	printk("pde_dest = %lx\n", pde_dest);
 	printk("pde_dest->present = %d\n", pde_dest->present);
 	if(pde_dest->present == 0) {
