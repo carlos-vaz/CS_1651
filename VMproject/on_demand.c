@@ -230,8 +230,8 @@ petmem_handle_pagefault(struct mem_map * map,
 		//invlpg(__pa(zeroed_user_pg));
 		
 	}
-	printk("POST WALK: pde_dest->accessed = %d\n", pde_dest->accessed);
-	pde_dest->accessed = 0;
+	printk("POST WALK: pdp_dest->accessed = %d\n", pdp_dest->accessed);
+	pdp_dest->accessed = 0;
 
 	return 0;
 }
