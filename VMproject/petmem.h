@@ -84,6 +84,16 @@ static inline void invlpg(uintptr_t page_addr) {
 			  );
 }
 
+static inline void flush_tlb(void) {
+    printk("Flushing TLB...\n");
+	__asm__ __volatile__ ("movq %cr3, %rax\n"
+			  	"movq %rax, %cr3;"
+			  : 
+			  :
+			  );
+
+}
+
 
 
 #include <linux/types.h>
