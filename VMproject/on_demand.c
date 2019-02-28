@@ -167,8 +167,8 @@ petmem_handle_pagefault(struct mem_map * map,
 		pml_dest_data.user_page = 1;
 		pml_dest_data.pdp_base_addr = PAGE_TO_BASE_ADDR(__pa(pdp_table_pg));
 */		pml_dest->present = 1;
-		pml_dest->writable = 1
-		pml_dest->user_page = 1
+		pml_dest->writable = 1;
+		pml_dest->user_page = 1;
 		pml_dest->pdp_base_addr = PAGE_TO_BASE_ADDR(__pa(pdp_table_pg));
 
 		// Write entry into PML table
