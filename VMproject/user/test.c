@@ -26,7 +26,7 @@ int main(int argc, char ** argv) {
 
 
     buf[50] = 'H';
- /*   buf[51] = 'e';
+    buf[51] = 'e';
     buf[52] = 'l';
     buf[53] = 'l';
     buf[54] = 'o';
@@ -42,10 +42,11 @@ int main(int argc, char ** argv) {
 
     printf("%s\n", (char *)(buf + 50));
 
+/*
     pet_free(buf);
 
     printf("%s\n", (char *)(buf + 50));
-*/   
+*/ 
 
     return 0;
 
