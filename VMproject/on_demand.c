@@ -237,8 +237,8 @@ petmem_handle_pagefault(struct mem_map * map,
 	if(pte_dest->present == 0) {
 		printk("USER ACCESSED PAGE NOT PRESENT... WRITING\n");
 		// Allocate ZEROED! page for user
-		//zeroed_user_pg = get_zeroed_page(GFP_KERNEL);
-		zeroed_user_pg = (unsigned long)petmem_alloc_pages(1);
+		zeroed_user_pg = get_zeroed_page(GFP_KERNEL);
+		//zeroed_user_pg = (unsigned long)petmem_alloc_pages(1);
 		printk("Received BUDDY page for user @ %lx\n", zeroed_user_pg);
 		// Create PTE entry
 /*		pte_dest_data.present = 1;
