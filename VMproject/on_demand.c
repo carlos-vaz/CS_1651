@@ -111,14 +111,14 @@ petmem_free_vspace(struct mem_map * map,
 	cursor_next = list_entry(cursor->list.next, struct mem_map, list);
 	if(cursor_prev->allocated==0 && cursor_prev->head==0) {
 		// Combine with cursor_prev
-		printk("Combine with cursor_prev\n");
+		printk("Combine with cursor_prev (cursor_prev start = %lx)\n", cursor_prev->start);
 		cursor_prev->size += cursor->size;
 		list_del(&cursor->list);
 		cursor = cursor_prev;
 	}
 	if(cursor_next->allocated==0) {
 		// combine with cursor_next
-		printk("Combine with cursor_next\n");
+		printk("Combine with cursor_next (cursor_next start = %lx)\n", cursor_next->start);
 		cursor_next->start = cursor->start;
 		cursor_next->size += cursor->size;
 		list_del(&cursor->list);
