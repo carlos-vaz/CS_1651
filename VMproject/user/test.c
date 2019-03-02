@@ -13,6 +13,8 @@ int main(int argc, char ** argv) {
 	pet_dump();
 	buf1 = pet_malloc(8192);
 	pet_dump();
+	buf2 = pet_malloc(2176353);
+	pet_dump();
 	buf3 = pet_malloc(4096);
 	pet_dump();
 	buf4 = pet_malloc(40960);
