@@ -79,7 +79,7 @@ petmem_dump_vspace(struct mem_map * map)
 	struct mem_map *cursor;
 	int i=0;
 	list_for_each_entry(cursor, &map->list, list) {
-		printk("%sNode %d:\tAllocated = %d\n\tStart = %lu\n\tSize = %lu\n\n", 
+		printk("%sNode %d:\tAllocated = %d\n\tStart = %lx\n\tSize = %lu\n\n", 
 		cursor->head==1 ? "[HEAD] " : "" , i, cursor->allocated, cursor->start, cursor->size);
 		i++;
 	}
