@@ -104,7 +104,7 @@ petmem_free_vspace(struct mem_map * map,
 	}
 	printk("Indeed: freeing mem_map node %d\n", i);
 	cursor->allocated = 0;
-	cursor_prev = list_entry(cursor->list.next, struct mem_map, list);
+	cursor_prev = list_entry(cursor->list.prev, struct mem_map, list);
 	cursor_next = list_entry(cursor->list.next, struct mem_map, list);
 	printk("(cursor_prev start = %lx)\n", cursor_prev->start);
 	printk("(cursor_next start = %lx)\n", cursor_next->start);
