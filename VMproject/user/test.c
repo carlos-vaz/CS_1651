@@ -35,6 +35,7 @@ int main(int argc, char ** argv) {
 
 
     pet_free(buf);
+    pet_dump();
 /*
     printf("%s\n", (char *)(buf + 50));
 */ 
