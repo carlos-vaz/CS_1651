@@ -36,6 +36,10 @@ petmem_deinit_process(struct mem_map * map)
 {
 	// Iterate through mem_map, free memory if allocated, destroy mem_map nodes
 	// Called when user calls close(fd)?
+	struct mem_map *cursor;
+	list_for_each_entry(cursor, &map->list, list) {
+		
+	}
 }
 
 
@@ -223,7 +227,7 @@ void * walk_page_table(uintptr_t fault_addr) {
 	if(pml_dest->present == 0) {
 		printk("PDP TABLE PAGE NOT PRESENT... WRITING\n");
 		// Allocate page for PDP table
-		pdp_table_pg = __get_free_page(GFP_KERNEL);
+		pdp_table_pg = get_zeroed_page(GFP_KERNEL);
 		printk("Received page for pdp table @ %lx\n", pdp_table_pg);
 		// Create PML entry
 		pml_dest->present = 1;
@@ -239,7 +243,7 @@ void * walk_page_table(uintptr_t fault_addr) {
 	if(pdp_dest->present == 0) {		
 		printk("PDE TABLE PAGE NOT PRESENT... WRITING\n");
 		// Allocate page for PDE table
-		pde_table_pg = __get_free_page(GFP_KERNEL);
+		pde_table_pg = get_zeroed_page(GFP_KERNEL);
 		printk("Received page for pde table @ %lx\n", pde_table_pg);	
 		// Create PDP entry
 		pdp_dest->present = 1;
@@ -258,7 +262,7 @@ void * walk_page_table(uintptr_t fault_addr) {
 	if(pde_dest->present == 0) {
 		printk("PTE TABLE PAGE NOT PRESENT... WRITING\n");
 		// Allocate page for PTE table
-		pte_table_pg = __get_free_page(GFP_KERNEL);
+		pte_table_pg = get_zeroed_page(GFP_KERNEL);
 		printk("Received page for pte table @ %lx\n", pte_table_pg);	
 		// Create PDE entry
 		pde_dest->present = 1;
