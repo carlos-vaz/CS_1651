@@ -11,6 +11,7 @@
 #include <linux/module.h>
 
 #include "swap.h"
+#include "pgtables.h"
 
 struct mem_map {
 	struct list_head list;
@@ -25,6 +26,9 @@ void petmem_deinit_process(struct mem_map * map);
 
 uintptr_t petmem_alloc_vspace(struct mem_map * map, u64 num_pages);
 void petmem_free_vspace(struct mem_map * map, uintptr_t vaddr);
+
+void petmem_free_vspace(struct mem_map *, uintptr_t);
+pte64_t * walk_page_table(uintptr_t);
 
 void petmem_dump_vspace(struct mem_map * map);
 

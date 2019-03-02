@@ -101,9 +101,11 @@ void
 petmem_free_vspace(struct mem_map * map,
 		   uintptr_t        vaddr)
 {
-	printk("Free Memory\n");
 	struct mem_map *cursor, *cursor_next, *cursor_prev;
+	unsigned long free_start, free_size;
 	int i=0;
+	printk("Freeing Memory\n");
+	// Free the virtual memory
 	list_for_each_entry(cursor, &map->list, list) {
 		if(cursor->start==vaddr && cursor->allocated==1) {
 			printk("Freeing mem_map node %d\n", i);
@@ -111,6 +113,8 @@ petmem_free_vspace(struct mem_map * map,
 		}
 		i++;
 	}
+	free_start = cursor->start;
+	free_size = cursor->size;
 	printk("Indeed: freeing mem_map node %d\n", i);
 	cursor->allocated = 0;
 	cursor_prev = list_entry(cursor->list.prev, struct mem_map, list);
@@ -131,6 +135,24 @@ petmem_free_vspace(struct mem_map * map,
 		cursor_next->size += cursor->size;
 		list_del(&cursor->list);
 	}
+
+	// Free the physical pages
+	// TODO: Free the page table pages too
+	int freed = 0, num_pages = free_size/PAGE_SIZE_4KB;
+	pte64_t * pte;
+	unsigned long user_page;
+	for(i=0; i<num_pages; i++) {
+		pte = walk_page_table((uintptr_t)free_start+i*PAGE_SIZE_4KB);
+		if(pte->present == 0)
+			continue;
+		freed++;
+		pte->present = 0;
+		user_page = __va(BASE_TO_PAGE_ADDRESS(pte->page_base_addr));
+		invlpg(user_page);
+		// TODO: change to buddy system
+		free_page(user_page);
+	}
+	printk("Freed %d pages from mem_map node of size %d pages\n", c, num_pages);
 	return;
 }
 
@@ -287,6 +309,11 @@ petmem_handle_pagefault(struct mem_map * map,
 		// Invalidate PTE entry in case TLB cached it
 		invlpg(zeroed_user_pg); // TODO: Why would it cache?
 		
+	}
+	else {
+		// page faulted, but present. Should never be here. 
+		printk("YOU WILL NEVER SEE THIS: page faulted, but present\n");
+		// TODO: Is this the case where user has no permission?
 	}
 	flush_tlb(); // TODO: Remove this
 
