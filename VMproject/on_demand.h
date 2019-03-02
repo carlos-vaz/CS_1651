@@ -11,7 +11,6 @@
 #include <linux/module.h>
 
 #include "swap.h"
-#include "pgtables.h"
 
 struct mem_map {
 	struct list_head list;
