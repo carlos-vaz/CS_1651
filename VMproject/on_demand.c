@@ -103,15 +103,21 @@ petmem_free_vspace(struct mem_map * map,
 {
 	struct mem_map *cursor, *cursor_next, *cursor_prev;
 	unsigned long free_start, free_size;
-	int i=0;
+	int i=0, found=0;
 	printk("Freeing Memory\n");
 	// Free the virtual memory
 	list_for_each_entry(cursor, &map->list, list) {
 		if(cursor->start==vaddr && cursor->allocated==1) {
 			printk("Freeing mem_map node %d\n", i);
+			found = 1;
 			break;
 		}
 		i++;
+	}
+	// If not mapped, do not free
+	if (found==0) {
+		printk("petmem_free_vspace: user tried to free memory that was not mapped!\n");
+		return;
 	}
 	free_start = cursor->start;
 	free_size = cursor->size;
@@ -135,6 +141,7 @@ petmem_free_vspace(struct mem_map * map,
 		cursor_next->size += cursor->size;
 		list_del(&cursor->list);
 	}
+	
 
 	// Free the physical pages
 	// TODO: Free the page table pages too
