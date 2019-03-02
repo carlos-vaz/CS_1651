@@ -51,7 +51,7 @@ petmem_alloc_pages(u64 num_pages)
     }
     
     if (paddr) {
-	// TODO: Why are these two statements printing values for paddr?
+	// TODO: Why are these two statements printing different values for paddr?
        printk("Allocated %llu pages at %p\n", num_pages, (void *)paddr);
        printk("--> Allocated %llu pages at %lx\n", num_pages, (void *)paddr);
     } else {
@@ -212,7 +212,6 @@ static long petmem_ioctl(struct file * filp,
 	    }
 
 
-
 	    // 0 == success
 	    printk("ioctl PAGE_FAULT returning 0 (success!)\n");
 	    return 0;
@@ -251,6 +250,7 @@ static int petmem_open(struct inode * inode, struct file * filp) {
 static int petmem_release(struct inode * inode, struct file * filp) {
     struct mem_map * map = filp->private_data;
 
+	// TODO: 
     // garbage collect
 
     petmem_deinit_process(map);
@@ -323,7 +323,7 @@ static void __exit petmem_exit(void) {
     
     class_destroy(petmem_class);
 
-
+	// TODO: 
     // deinit buddy pools
     //    list_for_each_entry_safe(...)
 

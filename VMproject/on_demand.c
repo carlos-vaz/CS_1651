@@ -268,7 +268,7 @@ void * walk_page_table(uintptr_t fault_addr) {
 
 
 /* 
-   error_code:
+   error_code (derived from siginfo_t struct filled in by kernel upon segfault):
        1 == not present
        2 == permissions error
 */
@@ -278,12 +278,16 @@ petmem_handle_pagefault(struct mem_map * map,
 			uintptr_t        fault_addr,
 			u32              error_code)
 {
+	if(error_code==2) {
+		printk("petmem_handle_pagefault: Intercepted segfault, but it was due to a permission error.\nKill process!\n");
+		return -1;
+	}
 	printk("petmem_handle_pagefault: Page fault! At address\t %lx\n", fault_addr);
 	printk("petmem_handle_pagefault: Is this address allocated in our memory map?\n");
 	if(petmem_find_address(map, (unsigned long)fault_addr) == NULL) {
 		printk("petmem_handle_pagefault: Address %lx not mapped (returning 1)\n", fault_addr);
 		printk("petmem_handle_pagefault: Please prepare to die\n");
-		return 1;
+		return -1;
 	}
 
 	unsigned long zeroed_user_pg;
