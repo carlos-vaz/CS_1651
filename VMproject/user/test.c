@@ -43,7 +43,6 @@ int main(int argc, char ** argv) {
 	printf("%s\n", (char *)(buf + 50));
 
 
-
 	pet_free(buf);
 	pet_dump();
 	pet_free(buf1);
@@ -57,7 +56,7 @@ int main(int argc, char ** argv) {
 	pet_free(buf5);
 	pet_dump();
 
-	char * b = malloc(20);
+/*	char * b = malloc(20);
 	b[0] = 'u';
 	b[20] = 'u'; 
 	b[4095] = 'u';
@@ -67,7 +66,7 @@ int main(int argc, char ** argv) {
 	b[20*4096] = 'f';
 	printf("b[0] = %c\nb[20] = %c\nb[4095] = %c\nb[4096] = %c\n", b[0], b[20], b[4095], b[4096]);
 	printf("b[8191] = %c\nb[8192] = %c\nb[20*4096] = %c\n", b[8191], b[8192], b[20*4096]);
-
+*/
 	/*
 	printf("%s\n", (char *)(buf + 50));
 	*/ 
