@@ -39,6 +39,15 @@ petmem_deinit_process(struct mem_map * map)
 }
 
 
+struct mem_map * petmem_find_address(struct mem_map * map, unsigned long vaddr) {
+	struct mem_map *cursor;
+	list_for_each_entry(cursor, &map->list, list) {
+		if(cursor->allocated==1 && vaddr>=cursor->start && vaddr<cursor->start+cursor->size) 
+			return cursor;
+	}
+	return NULL;
+}
+
 uintptr_t
 petmem_alloc_vspace(struct mem_map * map,
 		    u64              num_pages)
@@ -248,6 +257,12 @@ petmem_handle_pagefault(struct mem_map * map,
 			u32              error_code)
 {
 	printk("petmem_handle_pagefault: Page fault! At address\t %lx\n", fault_addr);
+	printk("petmem_handle_pagefault: Is this address allocated in our memory map?\n");
+	if(petmem_find_address(map, (unsigned long)fault_addr) == NULL) {
+		printk("petmem_handle_pagefault: Address %lx not mapped (returning 1)\n", fault_addr);
+		printk("petmem_handle_pagefault: Please prepare to die\n");
+		return 1;
+	}
 
 	unsigned long zeroed_user_pg;
 	pte64_t * pte_dest = walk_page_table(fault_addr);
@@ -273,7 +288,7 @@ petmem_handle_pagefault(struct mem_map * map,
 		invlpg(zeroed_user_pg); // TODO: Why would it cache?
 		
 	}
-	flush_tlb();
+	flush_tlb(); // TODO: Remove this
 
 	return 0;
 }
