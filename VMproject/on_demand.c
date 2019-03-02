@@ -50,6 +50,7 @@ petmem_alloc_vspace(struct mem_map * map,
 			unsigned long combined_size = cursor->size;
 			cursor->start = last_start;
 			cursor->size = PAGE_SIZE_4KB*num_pages;
+			cursor->allocated = 1;
 			struct mem_map * new_map = kmalloc(sizeof(struct mem_map), GFP_KERNEL);
 			new_map->start = cursor->start + cursor->size;
 			new_map->size = combined_size - cursor->size;
