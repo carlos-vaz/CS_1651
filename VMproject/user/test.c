@@ -8,21 +8,12 @@
 int main(int argc, char ** argv) {
     init_petmem();
 
-//    void * addr = pet_malloc((size_t)4096);
-
     char * buf = NULL;
     buf = pet_malloc(4096);
 
-    printf("buf addrs (p): %p,  (lx): %lx\n", buf, buf);
+    printf("Allocated 1 page at %p\n", buf);
 
-	char * buf_mal = NULL;
-	buf_mal = malloc(4096);
-    printf("buf_malloc addrs (p): %p,  (lx): %lx\n", buf_mal, buf_mal);
-
-
-    //printf("Allocated 1 page at %p\n", buf);
-
-    //pet_dump();
+    pet_dump();
 
 
     buf[50] = 'H';
