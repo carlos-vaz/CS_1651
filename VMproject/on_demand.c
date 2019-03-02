@@ -44,6 +44,7 @@ petmem_alloc_vspace(struct mem_map * map,
 	unsigned long last_size = PETMEM_REGION_END - PETMEM_REGION_START;
 	printk("Memory allocation\n");
 	list_for_each_entry(cursor, &map->list, list) {
+		printk("Inside list_for_each: alloc=%d, size=%lu\n", cursor->allocated, cursor->size);
 		if(cursor->allocated == 0 && cursor->size/PAGE_SIZE_4KB >= num_pages) {
 			unsigned long combined_size = cursor->size;
 			cursor->start = last_start;
