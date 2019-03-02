@@ -12,10 +12,8 @@
 
 #include "swap.h"
 
-
-
 struct mem_map {
-	struct list_head * map_list;
+	struct list_head list;
 	unsigned long start;
 	unsigned long size;
 	int allocated;

@@ -11,23 +11,19 @@
 #include "swap.h"
 
 
-
-
 struct mem_map *
 petmem_init_process(void)
 {
-	struct mem_map * this_map = kmalloc(sizeof(struct mem_map), GFP_KERNEL);
-	this_map->allocated = 0;
-	//INIT_LIST_HEAD(this_map->map_list);
-	return this_map;
-  //return NULL;
+	struct mem_map * map = kmalloc(sizeof(struct mem_map), GFP_KERNEL);
+	INIT_LIST_HEAD(map->list);
+	return map;
 }
 
 
 void
 petmem_deinit_process(struct mem_map * map)
 {
-    
+	// Iterate through mem_map, free memory if allocated, destroy mem_map nodes
 }
 
 
@@ -35,20 +31,53 @@ uintptr_t
 petmem_alloc_vspace(struct mem_map * map,
 		    u64              num_pages)
 {
+	struct mem_map *cursor;
+	unsigned long last_start = PETMEM_REGION_START;
+	unsigned long last_size = PETMEM_REGION_END - PETMEM_REGION_START;
 	printk("Memory allocation\n");
-	if (map->allocated==1) {
+	list_for_each_entry(cursor, &map->list, list) {
+		if(cursor->allocated == 0 && cursor->size/PAGE_SIZE_4KB >= num_pages) {
+			unsigned long combined_size = cursor->size;
+			cursor->start = last_start;
+			cursor->size = PAGE_SIZE_4KB*num_pages;
+			struct mem_map * new_map = kmalloc(sizeof(struct mem_map), GFP_KERNEL);
+			new_map->start = cursor->start + cursor->size;
+			new_map->size = cursor->combined_size - cursor->size;
+			new_map->allocated = 0;
+			list_add_head(&new_map->list, &cursor->list);
+			return (uintptr_t)cursor->start;
+		}
+		last_start = cursor->start;
+		last_size = cursor->size;
+	}
+	printk("petmem_alloc_vspace: Memory allocation impossible (no adequate free memory region found)\n");
+	return NULL;
+
+/*	if (map->allocated==1) {
 		printk("mem_map already allocated! Can only pet_malloc once for now...\n");
 		return 0;
 	}
 	map->start = PETMEM_REGION_START;
 	map->size = num_pages*PAGE_SIZE_4KB;
 	map->allocated = 1;
-    return (uintptr_t)(map->start);
+    return (uintptr_t)(map->start);*/
 }
 
 void
 petmem_dump_vspace(struct mem_map * map)
 {
+	printk("-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n");
+	printk("-- -- -- -- --  MEMORY MAP DUMP  -- -- -- -- --\n");
+	printk("-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n\n");
+
+	struct mem_map *cursor;
+	int i=0;
+	list_for_each_entry(cursor, &map->list, list) {
+		printk("Node %d:\tAllocated = %d\n\tStart = %lu\n\tSize = %lu\n\n", 
+		i, cursor->allocated, cursor->start, cursor->size);
+		i++;
+	}
+
     return;
 }
 
