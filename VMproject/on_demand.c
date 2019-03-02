@@ -142,7 +142,7 @@ petmem_free_vspace(struct mem_map * map,
 	pte64_t * pte;
 	unsigned long user_page;
 	for(i=0; i<num_pages; i++) {
-		pte = walk_page_table((uintptr_t)free_start+i*PAGE_SIZE_4KB);
+		pte = (	pte64_t * )walk_page_table((uintptr_t)free_start+i*PAGE_SIZE_4KB);
 		if(pte->present == 0)
 			continue;
 		freed++;
@@ -157,7 +157,7 @@ petmem_free_vspace(struct mem_map * map,
 }
 
 
-pte64_t * walk_page_table(uintptr_t fault_addr) {
+void * walk_page_table(uintptr_t fault_addr) {
 
 
 	// Grab cr3
@@ -287,7 +287,7 @@ petmem_handle_pagefault(struct mem_map * map,
 	}
 
 	unsigned long zeroed_user_pg;
-	pte64_t * pte_dest = walk_page_table(fault_addr);
+	pte64_t * pte_dest = (pte64_t *)walk_page_table(fault_addr);
 
 	printk("pte_dest = %lx\n", pte_dest);
 	printk("pte_dest->present = %d\n", pte_dest->present);
