@@ -14,9 +14,17 @@
 struct mem_map *
 petmem_init_process(void)
 {
+	// Create entry mem_map for LIST_HEAD
+	struct mem_map * map0 = kmalloc(sizeof(struct mem_map), GFP_KERNEL);
+	INIT_LIST_HEAD(&map0->list);
+
+	// Create contents mem_map containing all free memory
 	struct mem_map * map = kmalloc(sizeof(struct mem_map), GFP_KERNEL);
-	INIT_LIST_HEAD(&map->list);
-	return map;
+	map->allocated = 0;
+	map->start = PETMEM_REGION_START;
+	map->size = PETMEM_REGION_END - PETMEM_REGION_START;
+	
+	return map0;
 }
 
 
