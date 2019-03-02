@@ -147,12 +147,12 @@ petmem_free_vspace(struct mem_map * map,
 			continue;
 		freed++;
 		pte->present = 0;
-		user_page = __va(BASE_TO_PAGE_ADDRESS(pte->page_base_addr));
+		user_page = __va(BASE_TO_PAGE_ADDR(pte->page_base_addr));
 		invlpg(user_page);
 		// TODO: change to buddy system
 		free_page(user_page);
 	}
-	printk("Freed %d pages from mem_map node of size %d pages\n", c, num_pages);
+	printk("Freed %d pages from mem_map node of size %d pages\n", freed, num_pages);
 	return;
 }
 
