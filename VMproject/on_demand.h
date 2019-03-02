@@ -17,6 +17,7 @@ struct mem_map {
 	unsigned long start;
 	unsigned long size;
 	int allocated;
+	int head;
 };
 
 struct mem_map * petmem_init_process(void);

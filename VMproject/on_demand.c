@@ -17,12 +17,14 @@ petmem_init_process(void)
 	// Create entry mem_map for LIST_HEAD
 	struct mem_map * map0 = kmalloc(sizeof(struct mem_map), GFP_KERNEL);
 	INIT_LIST_HEAD(&map0->list);
+	map0->head = 1;
 
 	// Create contents mem_map containing all free memory
 	struct mem_map * map = kmalloc(sizeof(struct mem_map), GFP_KERNEL);
 	map->allocated = 0;
 	map->start = PETMEM_REGION_START;
 	map->size = PETMEM_REGION_END - PETMEM_REGION_START;
+	map->head = 0;
 	list_add(&map->list, &map0->list);
 	
 	return map0;
@@ -56,6 +58,7 @@ petmem_alloc_vspace(struct mem_map * map,
 			new_map->start = cursor->start + cursor->size;
 			new_map->size = combined_size - cursor->size;
 			new_map->allocated = 0;
+			new_map->head = 0;
 			list_add(&new_map->list, &cursor->list);
 			return (uintptr_t)cursor->start;
 		}
@@ -76,8 +79,8 @@ petmem_dump_vspace(struct mem_map * map)
 	struct mem_map *cursor;
 	int i=0;
 	list_for_each_entry(cursor, &map->list, list) {
-		printk("Node %d:\tAllocated = %d\n\tStart = %lu\n\tSize = %lu\n\n", 
-		i, cursor->allocated, cursor->start, cursor->size);
+		printk("%sNode %d:\tAllocated = %d\n\tStart = %lu\n\tSize = %lu\n\n", 
+		cursor->head==1 ? "[HEAD] " : "" , i, cursor->allocated, cursor->start, cursor->size);
 		i++;
 	}
 
@@ -106,7 +109,7 @@ petmem_free_vspace(struct mem_map * map,
 	cursor->allocated = 0;
 	cursor_prev = list_entry(cursor->list.next, struct mem_map, list);
 	cursor_next = list_entry(cursor->list.next, struct mem_map, list);
-	if(cursor_prev->allocated==0) {
+	if(cursor_prev->allocated==0 && cursor_prev->head==0) {
 		// Combine with cursor_prev
 		cursor_prev->size += cursor->size;
 		list_del(&cursor->list);
