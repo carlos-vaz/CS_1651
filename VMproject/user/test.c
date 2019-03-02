@@ -59,8 +59,10 @@ int main(int argc, char ** argv) {
 
 	char * b = malloc(20);
 	b[0] = 'u';
-	b[20] = 'f'; // Will cause segfault (lack of permission?)
-	printf("b[0] = %c\n b[20] = %c\n", b[0], b[20]);
+	b[20] = 'u'; 
+	b[4095] = 'u';
+	b[4096] = 'f';
+	printf("b[0] = %c\nb[20] = %cb[4095] = %c\nb[4096] = %c\n", b[0], b[20], b[4095], b[4096]);
 
 	/*
 	printf("%s\n", (char *)(buf + 50));
