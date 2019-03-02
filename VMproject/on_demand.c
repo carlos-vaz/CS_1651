@@ -126,26 +126,8 @@ petmem_free_vspace(struct mem_map * map,
 }
 
 
-/* 
-   error_code:
-       1 == not present
-       2 == permissions error
-*/
+pte64t * walk_page_table(uintptr_t fault_addr) {
 
-int
-petmem_handle_pagefault(struct mem_map * map,
-			uintptr_t        fault_addr,
-			u32              error_code)
-{
-	printk("Page fault! At address\t %lx\n", fault_addr);
-	printk("Map start:\t\t %lx\n", map->start);
-
-
-	// Ask buddy for page
-	//uintptr_t assigned = petmem_alloc_pages(1);
-	//printk("Buddy assigned %lx \n", assigned);
-
-	// Map the page into page tables
 
 	// Grab cr3
 	unsigned long cr3 = get_cr3();
@@ -178,20 +160,8 @@ petmem_handle_pagefault(struct mem_map * map,
 	// VA --> PTE64 Index
 	unsigned long pte_index = PTE64_INDEX(fault_addr);
 	printk("PTE64 Index =  %lu\n", pte_index);
-	
 
-/*	// Walk to PML
-	void * v_cr3 = __va(cr3);
-	printk("(Suspected wrong) Virtual cr3 (addrs of PML table) = %lx\n", v_cr3);
-	v_cr3 =  CR3_TO_PML4E64_VA(cr3);
-	printk("(Suspected right) Virtual cr3 (addrs of PML table) = %lx\n", v_cr3);
-	void * v_pml_dest = v_cr3 + pml_index;
-	printk("PML Table + PML Index (virtual) = %lx\n", v_pml_dest);
-	printk("Dereferencing...\n");
-	pml4e64_t * pml_dest_data = (pml4e64_t *)v_pml_dest;
-	printk("pml_dest->present = %d\n", pml_dest_data->present);
-	//printk("PML entry data = %lx \n", pml_dest_data);
-*/
+
 	printk("------- Corrections ------\n");
 	void * va_test = NULL;
 	printk("__va Test: phys: %lx, \tvirt: %lx\n", va_test, __va(va_test));
@@ -200,10 +170,6 @@ petmem_handle_pagefault(struct mem_map * map,
 	pdpe64_t  * pdp_dest;
 	pde64_t   * pde_dest;
 	pte64_t   * pte_dest;
-	pml4e64_t   pml_dest_data;
-	pdpe64_t    pdp_dest_data;
-	pde64_t     pde_dest_data;
-	pte64_t     pte_dest_data;
 	unsigned long pdp_table_pg;
 	unsigned long pde_table_pg;
 	unsigned long pte_table_pg;
@@ -223,20 +189,12 @@ petmem_handle_pagefault(struct mem_map * map,
 		pdp_table_pg = __get_free_page(GFP_KERNEL);
 		printk("Received page for pdp table @ %lx\n", pdp_table_pg);
 		// Create PML entry
-/*		pml_dest_data.present = 1;
-		pml_dest_data.writable = 1;
-		pml_dest_data.user_page = 1;
-		pml_dest_data.pdp_base_addr = PAGE_TO_BASE_ADDR(__pa(pdp_table_pg));
-*/		pml_dest->present = 1;
+		pml_dest->present = 1;
 		pml_dest->writable = 1;
 		pml_dest->user_page = 1;
 		pml_dest->pdp_base_addr = PAGE_TO_BASE_ADDR(__pa(pdp_table_pg));
-
-		// Write entry into PML table
-		//*pml_dest = pml_dest_data;
 		printk("PML Entry: present = %d\n", pml_dest->present);
 		printk("PML Entry: pdp_base_addr = %lx\n", pml_dest->pdp_base_addr);
-		//invlpg(__pa(pdp_table_pg));
 	}
 	pdp_dest = __va(BASE_TO_PAGE_ADDR(pml_dest->pdp_base_addr)) + pdp_index*sizeof(pdpe64_t);
 	printk("pdp_dest = %lx\n", pdp_dest);
@@ -247,19 +205,10 @@ petmem_handle_pagefault(struct mem_map * map,
 		pde_table_pg = __get_free_page(GFP_KERNEL);
 		printk("Received page for pde table @ %lx\n", pde_table_pg);	
 		// Create PDP entry
-/*		pdp_dest_data.present = 1;
-		pdp_dest_data.writable = 1;
-		pdp_dest_data.user_page = 1;
-		pdp_dest_data.pd_base_addr = PAGE_TO_BASE_ADDR(__pa(pde_table_pg));
-*/
 		pdp_dest->present = 1;
 		pdp_dest->writable = 1;
 		pdp_dest->user_page = 1;
 		pdp_dest->pd_base_addr = PAGE_TO_BASE_ADDR(__pa(pde_table_pg));
-
-
-		// Write entry into PDP table
-//		*pdp_dest = pdp_dest_data;
 		printk("PDP Entry: present = %d\n", pdp_dest->present);
 		printk("PDP Entry: pd_base_addr = %lx\n", pdp_dest->pd_base_addr);
 	}
@@ -275,24 +224,35 @@ petmem_handle_pagefault(struct mem_map * map,
 		pte_table_pg = __get_free_page(GFP_KERNEL);
 		printk("Received page for pte table @ %lx\n", pte_table_pg);	
 		// Create PDE entry
-/*		pde_dest_data.present = 1;
-		pde_dest_data.writable = 1;
-		pde_dest_data.user_page = 1;
-		pde_dest_data.pt_base_addr = PAGE_TO_BASE_ADDR(__pa(pte_table_pg));
-*/
-
 		pde_dest->present = 1;
 		pde_dest->writable = 1;
 		pde_dest->user_page = 1;
 		pde_dest->pt_base_addr = PAGE_TO_BASE_ADDR(__pa(pte_table_pg));
-
-
-		// Write entry into PDE table
-//		*pde_dest = pde_dest_data;
 		printk("PDE Entry: present = %d\n", pde_dest->present);
 		printk("PDE Entry: pt_base_addr = %lx\n", pde_dest->pt_base_addr);
 	}
 	pte_dest = __va(BASE_TO_PAGE_ADDR(pde_dest->pt_base_addr)) + pte_index*sizeof(pte64_t);
+	return pte_dest;
+
+}
+
+
+/* 
+   error_code:
+       1 == not present
+       2 == permissions error
+*/
+
+int
+petmem_handle_pagefault(struct mem_map * map,
+			uintptr_t        fault_addr,
+			u32              error_code)
+{
+	printk("Page fault! At address\t %lx\n", fault_addr);
+	printk("Map start:\t\t %lx\n", map->start);
+
+
+	pte64_t * pte_dest = walk_page_table(fault_addr);
 	printk("pte_dest = %lx\n", pte_dest);
 	printk("pte_dest->present = %d\n", pte_dest->present);
 	if(pte_dest->present == 0) {
@@ -302,23 +262,16 @@ petmem_handle_pagefault(struct mem_map * map,
 		//zeroed_user_pg = (unsigned long)petmem_alloc_pages(1);
 		printk("Received BUDDY page for user @ %lx\n", zeroed_user_pg);
 		// Create PTE entry
-/*		pte_dest_data.present = 1;
-		pte_dest_data.writable = 1;
-		pte_dest_data.user_page = 1;
-		pte_dest_data.page_base_addr = PAGE_TO_BASE_ADDR(__pa(zeroed_user_pg));
-*/
 		pte_dest->present = 1;
 		pte_dest->writable = 1;
 		pte_dest->user_page = 1;
 		pte_dest->page_base_addr = PAGE_TO_BASE_ADDR(__pa(zeroed_user_pg));
 
-		// Write entry into PTE table
-//		*pte_dest = pte_dest_data;
 		printk("PTE Entry: present = %d\n", pte_dest->present);
 		printk("PTE Entry: page_base_addr = %lx\n", pte_dest->page_base_addr);
 
 		// Invalidate PTE entry in case TLB cached it
-		//invlpg(__pa(zeroed_user_pg));
+		invlpg(zeroed_user_pg); // TODO: Why would it cache?
 		
 	}
 	flush_tlb();
@@ -326,7 +279,6 @@ petmem_handle_pagefault(struct mem_map * map,
 	printk("MMU TRACE: pdp_dest->accessed = %d\n", pdp_dest->accessed);
 	pml_dest->accessed = 0;
 	pdp_dest->accessed = 0;
-
 
 	return 0;
 }
