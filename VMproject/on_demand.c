@@ -126,7 +126,7 @@ petmem_free_vspace(struct mem_map * map,
 }
 
 
-pte64t * walk_page_table(uintptr_t fault_addr) {
+pte64_t * walk_page_table(uintptr_t fault_addr) {
 
 
 	// Grab cr3
@@ -173,7 +173,6 @@ pte64t * walk_page_table(uintptr_t fault_addr) {
 	unsigned long pdp_table_pg;
 	unsigned long pde_table_pg;
 	unsigned long pte_table_pg;
-	unsigned long zeroed_user_pg;
 
 	
 	pml_dest = CR3_TO_PML4E64_VA(cr3) + pml_index*sizeof(pml4e64_t);
@@ -248,11 +247,11 @@ petmem_handle_pagefault(struct mem_map * map,
 			uintptr_t        fault_addr,
 			u32              error_code)
 {
-	printk("Page fault! At address\t %lx\n", fault_addr);
-	printk("Map start:\t\t %lx\n", map->start);
+	printk("petmem_handle_pagefault: Page fault! At address\t %lx\n", fault_addr);
 
-
+	unsigned long zeroed_user_pg;
 	pte64_t * pte_dest = walk_page_table(fault_addr);
+
 	printk("pte_dest = %lx\n", pte_dest);
 	printk("pte_dest->present = %d\n", pte_dest->present);
 	if(pte_dest->present == 0) {
@@ -275,10 +274,6 @@ petmem_handle_pagefault(struct mem_map * map,
 		
 	}
 	flush_tlb();
-	printk("MMU TRACE: pml_dest->accessed = %d\n", pml_dest->accessed);
-	printk("MMU TRACE: pdp_dest->accessed = %d\n", pdp_dest->accessed);
-	pml_dest->accessed = 0;
-	pdp_dest->accessed = 0;
 
 	return 0;
 }
