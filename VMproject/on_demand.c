@@ -23,6 +23,7 @@ petmem_init_process(void)
 	map->allocated = 0;
 	map->start = PETMEM_REGION_START;
 	map->size = PETMEM_REGION_END - PETMEM_REGION_START;
+	list_add(&map->list, &map0->list);
 	
 	return map0;
 }
