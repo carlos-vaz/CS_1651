@@ -51,7 +51,6 @@ petmem_alloc_vspace(struct mem_map * map,
 		printk("Inside list_for_each: alloc=%d, size=%lu\n", cursor->allocated, cursor->size);
 		if(cursor->allocated == 0 && cursor->size/PAGE_SIZE_4KB >= num_pages) {
 			unsigned long combined_size = cursor->size;
-			cursor->start = last_start;
 			cursor->size = PAGE_SIZE_4KB*num_pages;
 			cursor->allocated = 1;
 			struct mem_map * new_map = kmalloc(sizeof(struct mem_map), GFP_KERNEL);
@@ -62,8 +61,6 @@ petmem_alloc_vspace(struct mem_map * map,
 			list_add(&new_map->list, &cursor->list);
 			return (uintptr_t)cursor->start;
 		}
-		last_start = cursor->start;
-		last_size = cursor->size;
 	}
 	printk("petmem_alloc_vspace: Memory allocation impossible (no adequate free memory region found)\n");
 	return NULL;
