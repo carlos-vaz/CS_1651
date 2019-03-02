@@ -279,7 +279,7 @@ petmem_handle_pagefault(struct mem_map * map,
 			u32              error_code)
 {
 	if(error_code==2) {
-		printk("petmem_handle_pagefault: Intercepted segfault, but it was due to a permission error.\nKill process!\n");
+		printk("petmem_handle_pagefault: Intercepted segfault, but it was due to a permission error.\nPlease prepare to die.\n");
 		return -1;
 	}
 	printk("petmem_handle_pagefault: Page fault! At address\t %lx\n", fault_addr);

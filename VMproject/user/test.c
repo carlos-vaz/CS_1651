@@ -57,6 +57,10 @@ int main(int argc, char ** argv) {
 	pet_free(buf5);
 	pet_dump();
 
+	char * b = malloc(20);
+	b[0] = 'u';
+	b[20] = 'f'; // Will cause segfault (lack of permission?)
+
 	/*
 	printf("%s\n", (char *)(buf + 50));
 	*/ 
