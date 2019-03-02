@@ -15,7 +15,7 @@ struct mem_map *
 petmem_init_process(void)
 {
 	struct mem_map * map = kmalloc(sizeof(struct mem_map), GFP_KERNEL);
-	INIT_LIST_HEAD(map->list);
+	INIT_LIST_HEAD(&map->list);
 	return map;
 }
 
@@ -42,9 +42,9 @@ petmem_alloc_vspace(struct mem_map * map,
 			cursor->size = PAGE_SIZE_4KB*num_pages;
 			struct mem_map * new_map = kmalloc(sizeof(struct mem_map), GFP_KERNEL);
 			new_map->start = cursor->start + cursor->size;
-			new_map->size = cursor->combined_size - cursor->size;
+			new_map->size = combined_size - cursor->size;
 			new_map->allocated = 0;
-			list_add_head(&new_map->list, &cursor->list);
+			list_add(&new_map->list, &cursor->list);
 			return (uintptr_t)cursor->start;
 		}
 		last_start = cursor->start;
