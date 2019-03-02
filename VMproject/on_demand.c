@@ -93,10 +93,10 @@ petmem_free_vspace(struct mem_map * map,
 		   uintptr_t        vaddr)
 {
 	printk("Free Memory\n");
-	mem_map *cursor, *cursor_next, *cursor_prev;
+	struct mem_map *cursor, *cursor_next, *cursor_prev;
 	int i=0;
 	list_for_each_entry(cursor, &map->list, list) {
-		if(cursor->start==vaddr && allocated==1) {
+		if(cursor->start==vaddr && cursor->allocated==1) {
 			printk("Freeing mem_map node %d\n", i);
 			break;
 		}
