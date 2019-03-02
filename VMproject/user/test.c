@@ -22,8 +22,6 @@ int main(int argc, char ** argv) {
 
 	//printf("Allocated 1 page at %p\n", buf);
 
-	pet_dump();
-
 
 	buf[50] = 'H';
 	buf[51] = 'e';
