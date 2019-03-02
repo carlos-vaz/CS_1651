@@ -33,6 +33,7 @@ void
 petmem_deinit_process(struct mem_map * map)
 {
 	// Iterate through mem_map, free memory if allocated, destroy mem_map nodes
+	// Called when user calls close(fd)?
 }
 
 
@@ -63,15 +64,6 @@ petmem_alloc_vspace(struct mem_map * map,
 	}
 	printk("petmem_alloc_vspace: Memory allocation impossible (no adequate free memory region found)\n");
 	return NULL;
-
-/*	if (map->allocated==1) {
-		printk("mem_map already allocated! Can only pet_malloc once for now...\n");
-		return 0;
-	}
-	map->start = PETMEM_REGION_START;
-	map->size = num_pages*PAGE_SIZE_4KB;
-	map->allocated = 1;
-    return (uintptr_t)(map->start);*/
 }
 
 void
@@ -100,8 +92,32 @@ void
 petmem_free_vspace(struct mem_map * map,
 		   uintptr_t        vaddr)
 {
-    printk("Free Memory\n");
-    return;
+	printk("Free Memory\n");
+	mem_map *cursor, *cursor_next, *cursor_prev;
+	int i=0;
+	list_for_each_entry(cursor, &map->list, list) {
+		if(cursor->start==vaddr && allocated==1) {
+			printk("Freeing mem_map node %d\n", i);
+			break;
+		}
+		i++;
+	}
+	printk("Indeed: freeing mem_map node %d\n", i);
+	cursor->allocated = 0;
+	cursor_prev = list_entry(cursor->list->next, struct mem_map, list);
+	cursor_next = list_entry(cursor->list->next, struct mem_map, list);
+	if(cursor_prev->allocated==0) {
+		// Combine with cursor_prev
+		cursor_prev->size += cursor->size;
+		list_del(&cursor->list);
+		cursor = cursor_prev;
+	}
+	if(cursor_next->allocated==0) {
+		cursor_next->start = cursor->start;
+		cursor_next->size += cursor->size;
+		list_del(&cursor->list);
+	}
+	return;
 }
 
 

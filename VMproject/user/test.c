@@ -33,9 +33,9 @@ int main(int argc, char ** argv) {
 
     printf("%s\n", (char *)(buf + 50));
 
-/*
-    pet_free(buf);
 
+    pet_free(buf);
+/*
     printf("%s\n", (char *)(buf + 50));
 */ 
 
