@@ -331,7 +331,7 @@ void print_pml(void) {
 	int i;
 	for(i=0; i<MAX_PML4E64_ENTRIES; i++) {
 		printk("Entry %d: Present = %d\n", i, cur->present);
-		cur += sizeof(pml4e64);
+		cur += sizeof(pml4e64_t);
 	}
 	
 }
