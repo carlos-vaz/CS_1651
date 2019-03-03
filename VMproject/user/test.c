@@ -46,9 +46,9 @@ int main(int argc, char ** argv) {
 	pet_free(buf);
 	pet_dump();
 
-	char * b_k = (char *)0xFFFF954cf57e9200;
+/*	char * b_k = (char *)0xFFFF954cf57e9200;
 	printf("Kernel space access from userland: %c\n", b_k[0]); // SHould give 'lack of permission' sig code on Seg Fault
-								   // No! Sig code actually tells us 'not present'
+*/								   // No! Sig code actually tells us 'not present'
 	
 /*	pet_free(buf1);
 	pet_dump();
@@ -75,6 +75,7 @@ int main(int argc, char ** argv) {
 	/*
 	printf("%s\n", (char *)(buf + 50));
 	*/ 
+	print_pml_call();
 
 	return 0;
 
