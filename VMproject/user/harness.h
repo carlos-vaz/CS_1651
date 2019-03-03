@@ -6,3 +6,4 @@ void pet_free(void * addr);
 void pet_dump();
 void pet_invlpg(void * addr);
 void pass_address(void *);
+void print_pml_call(void);

@@ -47,6 +47,7 @@ struct page_fault {
 
 #define PAGE_FAULT      50
 #define INVALIDATE_PAGE 51
+#define PRINT_PML	52
 
 
 #ifdef __KERNEL__

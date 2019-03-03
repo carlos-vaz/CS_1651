@@ -227,6 +227,10 @@ static long petmem_ioctl(struct file * filp,
 	case ALLOCATE:
 	case RELEASE_MEMORY:
 	case FREE:
+	case PRINT_PML: {
+		printk("ioctl PRINT_PML\n");
+		print_pml();
+	}
 
 	default:
 	    printk("Unhandled ioctl (%d)\n", ioctl);

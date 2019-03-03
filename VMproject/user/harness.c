@@ -121,3 +121,7 @@ init_petmem(void)
     return 0;
 }
 
+void print_pml_call(void) {
+	ioctl(fd, PRINT_PML);
+}
+

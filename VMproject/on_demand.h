@@ -26,6 +26,7 @@ void petmem_deinit_process(struct mem_map * map);
 uintptr_t petmem_alloc_vspace(struct mem_map * map, u64 num_pages);
 void petmem_free_vspace(struct mem_map * map, uintptr_t vaddr);
 
+void print_pml(void);
 void petmem_free_vspace(struct mem_map *, uintptr_t);
 void * walk_page_table(uintptr_t, int);
 

@@ -314,6 +314,26 @@ void * walk_page_table(uintptr_t fault_addr, int hard) {
 	return pte_dest;
 }
 
+void print_pml(void) {
+
+	printk("----  --- ---  ---  ---  ---   ---  ---  ---\n");
+	printk("---  ---  ---  PRINT PML TABLE ---  ---  ---\n");
+	printk("---  ---  ---  1: Present      ---  ---  ---\n");
+	printk("---  ---  ---  0: Not Present  ---  ---  ---\n");
+	printk("---  ---  ---  ---  ---  ---   ---  ---  ---\n\n");
+
+	// Grab cr3
+	unsigned long cr3, cr3_virt;
+	pml4e64_t * cur;
+	cr3 = get_cr3();
+	cr3_virt = CR3_TO_PML4E64_VA(cr3);
+	printk("CR3 = %lx\nCR3 to virtual: %lx\n", cr3, cr3_virt);
+	
+	for(int i=0; i<MAX_PML4E64_ENTRIES; i++)
+		prink("Entry %d: Present = %d\n", i, cur->present);
+	
+}
+
 
 /* 
    error_code (derived from siginfo_t struct filled in by kernel upon segfault):
