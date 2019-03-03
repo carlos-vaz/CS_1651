@@ -330,7 +330,7 @@ void print_pml(void) {
 	printk("CR3 = %lx\nCR3 to virtual: %lx\n", cr3, cr3_virt);
 	int i;
 	for(i=0; i<MAX_PML4E64_ENTRIES; i++) {
-		printk("Entry %d: Present = %d\n", i, cur->present);
+		printk("Entry %d: %d%s\n", i, cur->present, cur->present==1 ? " Present!" : "");
 		cur += sizeof(pml4e64_t);
 	}
 	
