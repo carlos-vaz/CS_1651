@@ -324,13 +324,15 @@ void print_pml(void) {
 
 	// Grab cr3
 	unsigned long cr3, cr3_virt;
-	pml4e64_t * cur;
 	cr3 = get_cr3();
 	cr3_virt = CR3_TO_PML4E64_VA(cr3);
+	pml4e64_t * cur = (pml4e64_t *)cr3_virt;
 	printk("CR3 = %lx\nCR3 to virtual: %lx\n", cr3, cr3_virt);
 	int i;
-	for(i=0; i<MAX_PML4E64_ENTRIES; i++)
+	for(i=0; i<MAX_PML4E64_ENTRIES; i++) {
 		printk("Entry %d: Present = %d\n", i, cur->present);
+		cur += sizeof(pml4e64);
+	}
 	
 }
 
