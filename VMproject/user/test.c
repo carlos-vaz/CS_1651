@@ -46,7 +46,7 @@ int main(int argc, char ** argv) {
 	pet_free(buf);
 	pet_dump();
 
-	char * b_k = 0xFFFF954cf57e9200;
+	char * b_k = (char *)0xFFFF954cf57e9200;
 	
 /*	pet_free(buf1);
 	pet_dump();
