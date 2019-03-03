@@ -161,9 +161,7 @@ petmem_free_vspace(struct mem_map * map,
 	unsigned long user_page;
 	for(i=0; i<num_pages; i++) {
 		pte = (	pte64_t * )walk_page_table((uintptr_t)free_start+i*PAGE_SIZE_4KB, 0);
-		if(pte == NULL)
-			continue;
-		if(pte->present == 0)
+		if(pte == NULL || pte->present == 0)
 			continue;
 		freed++;
 		pte->present = 0;
