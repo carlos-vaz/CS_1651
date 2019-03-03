@@ -230,6 +230,7 @@ static long petmem_ioctl(struct file * filp,
 	case PRINT_PML: {
 		printk("ioctl PRINT_PML\n");
 		print_pml();
+		break;
 	}
 
 	default:
