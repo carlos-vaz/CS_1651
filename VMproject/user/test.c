@@ -11,7 +11,7 @@ int main(int argc, char ** argv) {
 	char * buf, *buf1, *buf2, *buf3, *buf4, *buf5;
 	buf = pet_malloc(4096);
 	pet_dump();
-	buf1 = pet_malloc(8192);
+/*	buf1 = pet_malloc(8192);
 	pet_dump();
 	buf2 = pet_malloc(2176353);
 	pet_dump();
@@ -21,7 +21,7 @@ int main(int argc, char ** argv) {
 	pet_dump();
 	buf5 = pet_malloc(234);
 	pet_dump();
-
+*/
 	//printf("Allocated 1 page at %p\n", buf);
 
 
@@ -45,7 +45,7 @@ int main(int argc, char ** argv) {
 
 	pet_free(buf);
 	pet_dump();
-	pet_free(buf1);
+/*	pet_free(buf1);
 	pet_dump();
 	pet_free(buf2);
 	pet_dump();
@@ -55,7 +55,7 @@ int main(int argc, char ** argv) {
 	pet_dump();
 	pet_free(buf5);
 	pet_dump();
-
+*/
 /*	char * b = malloc(20);
 	b[0] = 'u';
 	b[20] = 'u'; 
