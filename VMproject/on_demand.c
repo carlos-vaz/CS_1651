@@ -248,7 +248,7 @@ void * walk_page_table(uintptr_t fault_addr, int hard) {
    //invlpg(CR3_TO_PML4E64_PA(cr3)); // invl pml page 
 	if(pml_dest->present == 0) {
 		if(hard==0) {
-			printk("page_walk hard==0, pml_dest->present==0. Stop.\n")
+			printk("page_walk hard==0, pml_dest->present==0. Stop.\n");
 			rerturn NULL;
 		}
 		printk("PDP TABLE PAGE NOT PRESENT... WRITING\n");
@@ -268,7 +268,7 @@ void * walk_page_table(uintptr_t fault_addr, int hard) {
 	printk("pdp_dest->present = %d\n", pdp_dest->present);
 	if(pdp_dest->present == 0) {	
 		if(hard==0) {
-			printk("page_walk hard==0, pdp_dest->present==0. Stop.\n")
+			printk("page_walk hard==0, pdp_dest->present==0. Stop.\n");
 			rerturn NULL;
 		}	
 		printk("PDE TABLE PAGE NOT PRESENT... WRITING\n");
@@ -291,7 +291,7 @@ void * walk_page_table(uintptr_t fault_addr, int hard) {
 	printk("pde_dest->present = %d\n", pde_dest->present);
 	if(pde_dest->present == 0) {
 		if(hard==0) {
-			printk("page_walk hard==0, pde_dest->present==0. Stop.\n")
+			printk("page_walk hard==0, pde_dest->present==0. Stop.\n");
 			rerturn NULL;
 		}
 		printk("PTE TABLE PAGE NOT PRESENT... WRITING\n");
@@ -308,7 +308,7 @@ void * walk_page_table(uintptr_t fault_addr, int hard) {
 	}
 	pte_dest = __va(BASE_TO_PAGE_ADDR(pde_dest->pt_base_addr)) + pte_index*sizeof(pte64_t);
 	if(pte_dest->present==0 && hard==0) {
-		printk("page_walk hard==0, & No userpage. Stop.\n")
+		printk("page_walk hard==0, & No userpage. Stop.\n");
 		rerturn NULL;
 	}
 	return pte_dest;
