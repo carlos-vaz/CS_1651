@@ -22,6 +22,19 @@ int main(int argc, char ** argv) {
 	buf5 = pet_malloc(234);
 	pet_dump();
 
+	pet_free(buf1);
+	pet_dump();
+	pet_free(buf2);
+	pet_dump();
+	pet_free(buf3);
+	pet_dump();
+	pet_free(buf4);
+	pet_dump();
+	pet_free(buf5);
+	pet_dump();
+
+
+
 
 	buf[50] = 'H';
 	buf[51] = 'e';
@@ -48,17 +61,6 @@ int main(int argc, char ** argv) {
 	printf("Kernel space access from userland: %c\n", b_k[0]); // SHould give 'lack of permission' sig code on Seg Fault
 */								   // No! Sig code actually tells us 'not present'
 	
-	pet_free(buf1);
-	pet_dump();
-	pet_free(buf2);
-	pet_dump();
-	pet_free(buf3);
-	pet_dump();
-	pet_free(buf4);
-	pet_dump();
-	pet_free(buf5);
-	pet_dump();
-
 /*	char * b = malloc(20);
 	b[0] = 'u';
 	b[20] = 'u'; 
