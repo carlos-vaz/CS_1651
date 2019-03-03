@@ -39,7 +39,7 @@ petmem_deinit_process(struct mem_map * map)
 	struct mem_map *cursor;
 	int i=0;
 	printk("CALLED PETMEM_DEINIT_PROCESS: !\n");
-	list_for_each_entry(cursor, &map->list, list) {
+	list_for_each_entry_safe(cursor, &map->list, list) {
 		if(cursor->allocated == 1) {
 			printk("petmem_DEINIT_process: Freeing node %d\n", i);
 			petmem_free_vspace(map, (uintptr_t)cursor->start);
