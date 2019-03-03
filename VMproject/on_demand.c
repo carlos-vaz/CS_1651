@@ -160,7 +160,9 @@ petmem_free_vspace(struct mem_map * map,
 	pte64_t * pte;
 	unsigned long user_page;
 	for(i=0; i<num_pages; i++) {
-		pte = (	pte64_t * )walk_page_table((uintptr_t)free_start+i*PAGE_SIZE_4KB);
+		pte = (	pte64_t * )walk_page_table((uintptr_t)free_start+i*PAGE_SIZE_4KB, 0);
+		if(pte == NULL)
+			continue;
 		if(pte->present == 0)
 			continue;
 		freed++;
@@ -175,7 +177,20 @@ petmem_free_vspace(struct mem_map * map,
 }
 
 
-void * walk_page_table(uintptr_t fault_addr) {
+/* 
+ *
+ * Walks the page table, allocating pages along the way for tables
+ * if specified. Will never allocate a page pointed by PTE (that is
+ * page fault handler's responsibility. Instead, returns PTE point-
+ * er or NULL. 
+ *
+ * ARGS: 
+ *	fault_addr: 	target address on PT walk
+ *	hard: 		if 1, allocate PT pages along the way.
+ *			If 0, return NULL at first present=0 find
+ *	
+ */
+void * walk_page_table(uintptr_t fault_addr, int hard) {
 
 
 	// Grab cr3
@@ -232,6 +247,10 @@ void * walk_page_table(uintptr_t fault_addr) {
    pml_dest->accessed = 0;
    //invlpg(CR3_TO_PML4E64_PA(cr3)); // invl pml page 
 	if(pml_dest->present == 0) {
+		if(hard==0) {
+			printk("page_walk hard==0, pml_dest->present==0. Stop.\n")
+			rerturn NULL;
+		}
 		printk("PDP TABLE PAGE NOT PRESENT... WRITING\n");
 		// Allocate page for PDP table
 		pdp_table_pg = get_zeroed_page(GFP_KERNEL);
@@ -247,7 +266,11 @@ void * walk_page_table(uintptr_t fault_addr) {
 	pdp_dest = __va(BASE_TO_PAGE_ADDR(pml_dest->pdp_base_addr)) + pdp_index*sizeof(pdpe64_t);
 	printk("pdp_dest = %lx\n", pdp_dest);
 	printk("pdp_dest->present = %d\n", pdp_dest->present);
-	if(pdp_dest->present == 0) {		
+	if(pdp_dest->present == 0) {	
+		if(hard==0) {
+			printk("page_walk hard==0, pdp_dest->present==0. Stop.\n")
+			rerturn NULL;
+		}	
 		printk("PDE TABLE PAGE NOT PRESENT... WRITING\n");
 		// Allocate page for PDE table
 		pde_table_pg = get_zeroed_page(GFP_KERNEL);
@@ -267,6 +290,10 @@ void * walk_page_table(uintptr_t fault_addr) {
 	printk("pde_dest = %lx\n", pde_dest);
 	printk("pde_dest->present = %d\n", pde_dest->present);
 	if(pde_dest->present == 0) {
+		if(hard==0) {
+			printk("page_walk hard==0, pde_dest->present==0. Stop.\n")
+			rerturn NULL;
+		}
 		printk("PTE TABLE PAGE NOT PRESENT... WRITING\n");
 		// Allocate page for PTE table
 		pte_table_pg = get_zeroed_page(GFP_KERNEL);
@@ -280,8 +307,11 @@ void * walk_page_table(uintptr_t fault_addr) {
 		printk("PDE Entry: pt_base_addr = %lx\n", pde_dest->pt_base_addr);
 	}
 	pte_dest = __va(BASE_TO_PAGE_ADDR(pde_dest->pt_base_addr)) + pte_index*sizeof(pte64_t);
+	if(pte_dest->present==0 && hard==0) {
+		printk("page_walk hard==0, & No userpage. Stop.\n")
+		rerturn NULL;
+	}
 	return pte_dest;
-
 }
 
 
@@ -309,7 +339,7 @@ petmem_handle_pagefault(struct mem_map * map,
 	}
 
 	unsigned long zeroed_user_pg;
-	pte64_t * pte_dest = (pte64_t *)walk_page_table(fault_addr);
+	pte64_t * pte_dest = (pte64_t *)walk_page_table(fault_addr, 1);
 
 	printk("pte_dest = %lx\n", pte_dest);
 	printk("pte_dest->present = %d\n", pte_dest->present);
