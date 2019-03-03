@@ -37,6 +37,7 @@ petmem_deinit_process(struct mem_map * map)
 	// Iterate through mem_map, free memory if allocated, destroy mem_map nodes
 	// Called when user calls close(fd)?
 	struct mem_map *cursor;
+	printk("CALLED PETMEM_DEINIT_PROCESS: !\n");
 	list_for_each_entry(cursor, &map->list, list) {
 		
 	}
