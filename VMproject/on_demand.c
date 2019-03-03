@@ -36,10 +36,10 @@ petmem_deinit_process(struct mem_map * map)
 {
 	// Iterate through mem_map, free memory if allocated, destroy mem_map nodes
 	// Called when user calls close(fd)?
-	struct mem_map *cursor;
+	struct mem_map *cursor, *next;
 	int i=0;
 	printk("CALLED PETMEM_DEINIT_PROCESS: !\n");
-	list_for_each_entry_safe(cursor, &map->list, list) {
+	list_for_each_entry_safe(cursor, next, &map->list, list) {
 		if(cursor->allocated == 1) {
 			printk("petmem_DEINIT_process: Freeing node %d\n", i);
 			petmem_free_vspace(map, (uintptr_t)cursor->start);
