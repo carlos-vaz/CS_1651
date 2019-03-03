@@ -156,21 +156,32 @@ petmem_free_vspace(struct mem_map * map,
 
 	// Free the physical pages
 	// TODO: Free the page table pages too
-	int freed = 0, num_pages = free_size/PAGE_SIZE_4KB;
+	int freed = 0, pt_freed = 0, num_pages = free_size/PAGE_SIZE_4KB, j;
 	pte64_t * pte;
 	unsigned long user_page;
 	for(i=0; i<num_pages; i++) {
 		pte = (	pte64_t * )walk_page_table((uintptr_t)free_start+i*PAGE_SIZE_4KB, 0);
-		if(pte == NULL || pte->present == 0)
+		// Page Table wasn't even allocated... Move to next PT 
+		if(pte == NULL) {
+			i += MAX_PTE64_ENTRIES-1; // If beyond vspace allocation, 'for' loop will end
 			continue;
-		freed++;
-		pte->present = 0;
-		user_page = __va(BASE_TO_PAGE_ADDR(pte->page_base_addr));
-		invlpg(user_page);
-		// TODO: change to buddy system
-		free_page(user_page);
+		}
+		// Check and free every user page in PT
+		for(j=0; j<MAX_PTE64_ENTRIES; j++) {
+			if(pte->present == 0)
+				continue;
+			freed++;
+			pte->present = 0;
+			user_page = __va(BASE_TO_PAGE_ADDR(pte->page_base_addr));
+			invlpg(user_page);
+			// TODO: change to buddy system
+			free_page(user_page);
+		}
+		// T, free PT
+		i += MAX_PTE64_ENTRIES-1;
 	}
-	printk("Freed %d pages from mem_map node of size %d pages\n", freed, num_pages);
+	printk("Freed %d user pages from mem_map node of size %d pages\n", freed, num_pages);
+	printk("Freed %d page table pages\n", pt_freed);
 	return;
 }
 

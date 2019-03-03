@@ -20,6 +20,16 @@ struct mem_map {
 	int head;
 };
 
+/*struct page_walk {
+	unsigned long pdp;
+	unsigned long pd;
+	unsigned long pt;
+	unsigned long pte;
+	int lone_pdpe;
+	int lone_pde;
+	int lone pte;
+};
+*/
 struct mem_map * petmem_init_process(void);
 void petmem_deinit_process(struct mem_map * map);
 
