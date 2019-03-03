@@ -249,7 +249,7 @@ void * walk_page_table(uintptr_t fault_addr, int hard) {
 	if(pml_dest->present == 0) {
 		if(hard==0) {
 			printk("page_walk hard==0, pml_dest->present==0. Stop.\n");
-			rerturn NULL;
+			return NULL;
 		}
 		printk("PDP TABLE PAGE NOT PRESENT... WRITING\n");
 		// Allocate page for PDP table
@@ -269,7 +269,7 @@ void * walk_page_table(uintptr_t fault_addr, int hard) {
 	if(pdp_dest->present == 0) {	
 		if(hard==0) {
 			printk("page_walk hard==0, pdp_dest->present==0. Stop.\n");
-			rerturn NULL;
+			return NULL;
 		}	
 		printk("PDE TABLE PAGE NOT PRESENT... WRITING\n");
 		// Allocate page for PDE table
@@ -292,7 +292,7 @@ void * walk_page_table(uintptr_t fault_addr, int hard) {
 	if(pde_dest->present == 0) {
 		if(hard==0) {
 			printk("page_walk hard==0, pde_dest->present==0. Stop.\n");
-			rerturn NULL;
+			return NULL;
 		}
 		printk("PTE TABLE PAGE NOT PRESENT... WRITING\n");
 		// Allocate page for PTE table
@@ -309,7 +309,7 @@ void * walk_page_table(uintptr_t fault_addr, int hard) {
 	pte_dest = __va(BASE_TO_PAGE_ADDR(pde_dest->pt_base_addr)) + pte_index*sizeof(pte64_t);
 	if(pte_dest->present==0 && hard==0) {
 		printk("page_walk hard==0, & No userpage. Stop.\n");
-		rerturn NULL;
+		return NULL;
 	}
 	return pte_dest;
 }
