@@ -161,11 +161,15 @@ petmem_free_vspace(struct mem_map * map,
 	 * From the PML Table entry, we will begin our find-and-free tree search. 
 	 * We will keep a counter of the pages we have covered. 
 	 */
-/*	unsigned long cr3 = get_cr3();	
+	unsigned long cr3 = get_cr3();	
 	unsigned long pml_index = PML4E64_INDEX(fault_addr);
 	unsigned long pdp_index = PDPE64_INDEX(fault_addr);
-	unsigned long pde_index = PDE64_INDEX(fault_addr);
-	unsigned long pte_index = PTE64_INDEX(fault_addr);
+	unsigned long pd_index = PDE64_INDEX(fault_addr);
+	unsigned long pt_index = PTE64_INDEX(fault_addr);
+	unsigned long pml_index_old;
+	unsigned long pdp_index_old;
+	unsigned long pd_index_old;
+	unsigned long pt_index_old;
 	pml4e64_t * pml_cur = CR3_TO_PML4E64_VA(cr3) + pml_index*sizeof(pml4e64);
 	pdpe64_t  * pdp_cur = NULL;
 	pde64_t   * pd_cur  = NULL;
@@ -174,83 +178,183 @@ petmem_free_vspace(struct mem_map * map,
 	int num_pages = free_size/PAGE_SIZE_4KB;
 	unsigned long pages_covered = 0;
 	int freed = 0;
-
-	int num_pmle, i;
-	int num_pdpe, j;
-	int num_pde,  k;
-	int num_pte,  l;
+	int freed_pt = 0;
 	unsigned long user_page;
 
-	num_pmle = determine_size(free_start, 0, 0);
-	for(i=0; i<num_pmle; i++) {
+	// Bits to determine if a PT belongs entirely to this vspace 
+	int pdp_mine = 0;
+	int pd_mine  = 0;
+	int pt_mine  = 0;
+
+	/*
+	 * Walk down the page tree as far down as you can and free pages
+	 * along the way. 
+	 */
+	while(pages_covered <= num_pages) {
+		pml_index_old = pml_index;
+		pdp_index_old = pdp_index;
+		pd_index_old = pd_index;
+		pt_index_old = pt_index;
+
 		if(pml_cur->present==0) {
-			pml_cur += sizeof(pml4e64_t);
+			pages_covered += (512-pdp_index)*(512-pd_index)*(512-pt_index);
 			pml_index++;
-			pages_covered += 512*512*512;
-			if(pml_index%512==0) {
-				// If PML Table limit, break and exit. You're done. 
-				break;
-			}
-			continue;
+			pdp_index = 0; pdp_mine = 1;
+			pd_index = 0;  pd_mine  = 1;
+			pt_index = 0;  pt_mine  = 1;
+			goto cascade;
 		}
-		pdp_cur = __va(BASE_TO_PAGE_ADDR(pml_cur->pdp_base_addr));  // search entire table, no offset
-		num_pdpe = determine_size(free_start, pages_covered, 1);
-		for(j=0; j<num_pdpe; j++) {
-			if(pdp_cur->present==0) {
-				pdp_cur += sizeof(pdpe64_t);
+		pdp_cur = __va(BASE_TO_PAGE_ADDR(pml_cur->pdp_base_addr)) + pdp_index*sizeof(pdpe64_t);
+		if(pdp_cur->present==0) {
+			pages_covered += (512-pd_index)*(512-pt_index);
+			pdp_index++;
+			pd_index = 0; pd_mine = 1;
+			pt_index = 0; pt_mine = 1;
+			goto cascade;
+		}
+		pd_cur = __va(BASE_TO_PAGE_ADDR(pdp_cur->pd_base_addr)) + pd_index*sizeof(pde64_t);
+		if(pd_cur->present==0) {
+			pages_covered += (512-pt_index);
+			pd_index++;
+			pt_index = 0; pt_mine = 1;
+			goto cascade;
+		}
+		pt_cur = __va(BASE_TO_PAGE_ADDR(pd_cur->pt_base_addr)) + pt_index*sizeof(pte64_t);
+		pt_index++;
+		pages_covered += 1;
+		if(pt_cur->present==1) {
+			// Free page
+			printk("USER PAGE FREE-ER: Freeing user page\n");
+			freed++;
+			pt_cur->present = 0;
+			user_page = __va(BASE_TO_PAGE_ADDR(pt_cur->page_base_addr));
+			invlpg(user_page);
+			// TODO: change to buddy system
+			free_page(user_page);
+		}
+
+cascade: 	if(pt_index%512==0) {
+			pd_index++;
+			if(pd_index%512==0) {
 				pdp_index++;
-				pages_covered += 512*512;
 				if(pdp_index%512==0) {
-					// If PDP Table limit, increment PML cursor
-					pdp_index = 0;
-					
-				}
-				continue;
-			}
-			pd_cur = __va(BASE_TO_PAGE_ADDR(pdp_cur->pd_base_addr));  // search entire table, no offset
-			num_pde = determine_size(free_start, pages_covered, 2);
-			for(k=0; k<num_pde; k++) {
-				if(pd_cur->present==0) {
-					pd_cur += sizeof(pde64_t);
-					pde_index++;
-					pages_covered += 512;
-					if(pde_index%512==0) {
-						// If PD Table limit, increment PDP cursor
-						pde_index = 0;
-					}
-					continue;
-				}
-				pt_cur = __va(BASE_TO_PAGE_ADDR(pd_cur->pt_base_addr));  // search entire table, no offset
-				num_pte = determine_size(free_start, pages_covered, 3);
-				for(l=0; l<num_pte; l++) {
-					if(pt_cur->present==0) {
-						pt_cur += sizeof(pte64_t);
-						pte_index++;
-						pages_covered += 1;
-						if(pte_index%512==0) {
-							// If PT Table limit, increment PD cursor
-							pte_index = 0;
-						}
-						continue;
-					}
-					pt_cur->present = 0;
-					user_page = __va(BASE_TO_PAGE_ADDR(pt_cur->page_base_addr));
-					invlpg(user_page);
-					// TODO: change to buddy system
-					free_page(user_page);
-					freed++;
-
-					pt_cur += sizeof(pte64_t);
-					pte_index++;
-					pages_covered += 1;
+					pml_index++;
+					if(pml_index%512==0)
+						printk("Overflowed PML Table!\n");
 				}
 			}
 		}
+
+
+		// Free PT pages as necessary, starting with PT --> PDP for cascading updates
+
+		if(pt_index != pt_index_old+1 && pt_index != pt_index_old) {
+			// PT Table's last entry was checked. If it belongs entirely to us, 
+			// that means we checked all of it and so free it. Otherwise, check
+			// if its empty and then free. 
+			pte64_t * pt_base = PAGE_ADDR(pt_cur);
+			if(pt_mine==1) {
+				// free pt table
+				printk("PT PAGE FREE-ER: Freeing PT Table\n");
+				pd_cur->present = 0;
+				freed_pt++;
+				invlpg(pt_base);
+				// TODO: change to buddy system
+				free_page(pt_base);
+			}
+			else {
+				int i, occup=0;
+				for(i=0; i<512; i++) {
+					pte64_t * c = pt_base + i*sizeof(pte64_t);
+					if(c->present==1) {
+						occupied = 1;
+						break;
+					}
+				}
+				if(occup==0) {
+					//free pt table
+					printk("PT PAGE FREE-ER: Freeing PT Table\n");
+					pd_cur->present = 0;
+					freed_pt++;
+					invlpg(pt_base);
+					// TODO: change to buddy system
+					free_page(pt_base);
+				}
+			}	
+		}
+		if(pd_index != pd_index_old+1 && pd_index != pd_index_old) {
+			// PD Table's last entry was checked. If it belongs entirely to us, 
+			// that means we checked all of it and so free it. Otherwise, check
+			// if its empty and then free. 
+			pde64_t * pd_base = PAGE_ADDR(pd_cur);
+			if(pd_mine==1) {
+				// free pd table
+				printk("PT PAGE FREE-ER: Freeing PD Table\n");
+				pdp_cur->present = 0;
+				freed_pt++;
+				invlpg(pd_base);
+				// TODO: change to buddy system
+				free_page(pd_base);
+			}
+			else {
+				int i, occup=0;
+				for(i=0; i<512; i++) {
+					pde64_t * c = pd_base + i*sizeof(pde64_t);
+					if(c->present==1) {
+						occupied = 1;
+						break;
+					}
+				}
+				if(occup==0) {
+					//free pd table
+					printk("PT PAGE FREE-ER: Freeing PD Table\n");
+					pdp_cur->present = 0;
+					freed_pt++;
+					invlpg(pd_base);
+					// TODO: change to buddy system
+					free_page(pd_base);
+				}
+			}	
+		}
+
+		if(pdp_index != pdp_index_old+1 && pdp_index != pdp_index_old) {
+			// PDP Table's last entry was checked. If it belongs entirely to us, 
+			// that means we checked all of it and so free it. Otherwise, check
+			// if its empty and then free. 
+			pdpe64_t * pdp_base = PAGE_ADDR(pdp_cur);
+			if(pdp_mine==1) {
+				// free pdp table
+				printk("PT PAGE FREE-ER: Freeing PDP Table\n");
+				pml_cur->present = 0;
+				freed_pt++;
+				invlpg(pdp_base);
+				// TODO: change to buddy system
+				free_page(pdp_base);
+			}
+			else {
+				int i, occup=0;
+				for(i=0; i<512; i++) {
+					pdpe64_t * c = pdp_base + i*sizeof(pdpe64_t);
+					if(c->present==1) {
+						occupied = 1;
+						break;
+					}
+				}
+				if(occup==0) {
+					//free pdp table
+					printk("PT PAGE FREE-ER: Freeing PDP Table\n");
+					pml_cur->present = 0;
+					freed_pt++;
+					invlpg(pdp_base);
+					// TODO: change to buddy system
+					free_page(pdp_base);
+				}
+			}	
+		}
+	
 	}
-*/
 
-
-	// Free the physical pages
+/*	// Free the physical pages
 	// TODO: Free the page table pages too
 	int freed = 0, pt_freed = 0, num_pages = free_size/PAGE_SIZE_4KB, j;
 	pte64_t * pte;
@@ -278,8 +382,10 @@ petmem_free_vspace(struct mem_map * map,
 		// Finally, free PT
 		i += MAX_PTE64_ENTRIES-1;
 	}
+*/
+
 	printk("Freed %d user pages from mem_map node of size %d pages\n", freed, num_pages);
-	printk("Freed %d page table pages\n", pt_freed);
+	printk("Freed %d page table pages\n", freed_pt);
 	return;
 }
 

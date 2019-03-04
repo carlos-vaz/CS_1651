@@ -77,7 +77,7 @@ static inline uintptr_t get_cr3(void) {
 
 
 static inline void invlpg(uintptr_t page_addr) {
-    printk("Invalidating Address %lx\n", (void *)page_addr);
+//    printk("Invalidating Address %lx\n", (void *)page_addr);
     __asm__ __volatile__ ("invlpg (%0); "
 			  : 
 			  :"r"(page_addr)
