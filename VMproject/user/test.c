@@ -9,9 +9,10 @@ int main(int argc, char ** argv) {
 	init_petmem();
 
 	char * buf, *buf1, *buf2, *buf3, *buf4, *buf5;
-	buf = pet_malloc(4096);
+	buf = pet_malloc(4096*513);
 	pet_dump();
-	buf1 = pet_malloc(8192);
+
+/*	buf1 = pet_malloc(8192);
 	pet_dump();
 	buf2 = pet_malloc(2176353);
 	pet_dump();
@@ -32,7 +33,7 @@ int main(int argc, char ** argv) {
 	pet_dump();
 	pet_free(buf5);
 	pet_dump();
-
+*/
 
 
 
@@ -50,6 +51,10 @@ int main(int argc, char ** argv) {
 	buf[61] = '!';
 	buf[62] = 0;
 
+	int i=0;
+	for(i=0; i<4096*513; i++)
+		buf[i] = 'y';
+	buf[62] = 0;
 
 	printf("%s\n", (char *)(buf + 50));
 
