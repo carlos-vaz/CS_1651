@@ -37,7 +37,7 @@ int main(int argc, char ** argv) {
 
 	int i=0;
 	for(i=0; i<5; i++)
-		buf[(i*4096)-1] = 'y';
+		buf[(i*4096)] = 'y';
 
 
 
