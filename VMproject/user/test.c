@@ -51,11 +51,11 @@ int main(int argc, char ** argv) {
 	buf[61] = '!';
 	buf[62] = 0;
 
-	int i=0;
+/*	int i=0;
 	for(i=0; i<4096*513; i++)
 		buf[i] = 'y';
 	buf[62] = 0;
-
+*/
 	printf("%s\n", (char *)(buf + 50));
 
 
