@@ -35,10 +35,10 @@ int main(int argc, char ** argv) {
 	pet_dump();
 */
 
-/*	int i=0;
-	for(i=0; i<500; i++)
+	int i=0;
+	for(i=0; i<5; i++)
 		buf[(i*4096)-1] = 'y';
-*/
+
 
 
 	buf[50] = 'H';
