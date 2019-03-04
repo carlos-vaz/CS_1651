@@ -105,6 +105,9 @@ petmem_dump_vspace(struct mem_map * map)
 }
 
 
+int determine_size(unsigned long start, int pages_covered, int level) {
+	return 512;
+}
 
 
 // Only the PML needs to stay, everything else can be freed
@@ -153,6 +156,99 @@ petmem_free_vspace(struct mem_map * map,
 		list_del(&cursor->list);
 	}
 	
+	/*
+	 * Now, we will free the physical pages.
+	 * From the PML Table entry, we will begin our find-and-free tree search. 
+	 * We will keep a counter of the pages we have covered. 
+	 */
+/*	unsigned long cr3 = get_cr3();	
+	unsigned long pml_index = PML4E64_INDEX(fault_addr);
+	unsigned long pdp_index = PDPE64_INDEX(fault_addr);
+	unsigned long pde_index = PDE64_INDEX(fault_addr);
+	unsigned long pte_index = PTE64_INDEX(fault_addr);
+	pml4e64_t * pml_cur = CR3_TO_PML4E64_VA(cr3) + pml_index*sizeof(pml4e64);
+	pdpe64_t  * pdp_cur = NULL;
+	pde64_t   * pd_cur  = NULL;
+	pte64_t   * pt_cur  = NULL:
+	
+	int num_pages = free_size/PAGE_SIZE_4KB;
+	unsigned long pages_covered = 0;
+	int freed = 0;
+
+	int num_pmle, i;
+	int num_pdpe, j;
+	int num_pde,  k;
+	int num_pte,  l;
+	unsigned long user_page;
+
+	num_pmle = determine_size(free_start, 0, 0);
+	for(i=0; i<num_pmle; i++) {
+		if(pml_cur->present==0) {
+			pml_cur += sizeof(pml4e64_t);
+			pml_index++;
+			pages_covered += 512*512*512;
+			if(pml_index%512==0) {
+				// If PML Table limit, break and exit. You're done. 
+				break;
+			}
+			continue;
+		}
+		pdp_cur = __va(BASE_TO_PAGE_ADDR(pml_cur->pdp_base_addr));  // search entire table, no offset
+		num_pdpe = determine_size(free_start, pages_covered, 1);
+		for(j=0; j<num_pdpe; j++) {
+			if(pdp_cur->present==0) {
+				pdp_cur += sizeof(pdpe64_t);
+				pdp_index++;
+				pages_covered += 512*512;
+				if(pdp_index%512==0) {
+					// If PDP Table limit, increment PML cursor
+					pdp_index = 0;
+					
+				}
+				continue;
+			}
+			pd_cur = __va(BASE_TO_PAGE_ADDR(pdp_cur->pd_base_addr));  // search entire table, no offset
+			num_pde = determine_size(free_start, pages_covered, 2);
+			for(k=0; k<num_pde; k++) {
+				if(pd_cur->present==0) {
+					pd_cur += sizeof(pde64_t);
+					pde_index++;
+					pages_covered += 512;
+					if(pde_index%512==0) {
+						// If PD Table limit, increment PDP cursor
+						pde_index = 0;
+					}
+					continue;
+				}
+				pt_cur = __va(BASE_TO_PAGE_ADDR(pd_cur->pt_base_addr));  // search entire table, no offset
+				num_pte = determine_size(free_start, pages_covered, 3);
+				for(l=0; l<num_pte; l++) {
+					if(pt_cur->present==0) {
+						pt_cur += sizeof(pte64_t);
+						pte_index++;
+						pages_covered += 1;
+						if(pte_index%512==0) {
+							// If PT Table limit, increment PD cursor
+							pte_index = 0;
+						}
+						continue;
+					}
+					pt_cur->present = 0;
+					user_page = __va(BASE_TO_PAGE_ADDR(pt_cur->page_base_addr));
+					invlpg(user_page);
+					// TODO: change to buddy system
+					free_page(user_page);
+					freed++;
+
+					pt_cur += sizeof(pte64_t);
+					pte_index++;
+					pages_covered += 1;
+				}
+			}
+		}
+	}
+*/
+
 
 	// Free the physical pages
 	// TODO: Free the page table pages too
@@ -166,8 +262,10 @@ petmem_free_vspace(struct mem_map * map,
 			i += MAX_PTE64_ENTRIES-1; // If beyond vspace allocation, 'for' loop will end
 			continue;
 		}
-		// Check and free every user page in PT
+		// Check and free every user page in PT if its within our vspace
 		for(j=0; j<MAX_PTE64_ENTRIES; j++) {
+			if(i+j > num_pages)
+				break; 
 			if(pte->present == 0)
 				continue;
 			freed++;
@@ -177,7 +275,7 @@ petmem_free_vspace(struct mem_map * map,
 			// TODO: change to buddy system
 			free_page(user_page);
 		}
-		// T, free PT
+		// Finally, free PT
 		i += MAX_PTE64_ENTRIES-1;
 	}
 	printk("Freed %d user pages from mem_map node of size %d pages\n", freed, num_pages);
