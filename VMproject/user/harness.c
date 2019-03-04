@@ -90,7 +90,7 @@ segv_handler(int         signum,
 	kill(getpid(), SIGSEGV);
     }
 
-    if (faults++ > 5) {exit(0);}
+   // if (faults++ > 5) {exit(0);}
 }
 
 
