@@ -162,18 +162,18 @@ petmem_free_vspace(struct mem_map * map,
 	 * We will keep a counter of the pages we have covered. 
 	 */
 	unsigned long cr3 = get_cr3();	
-	unsigned long pml_index = PML4E64_INDEX(fault_addr);
-	unsigned long pdp_index = PDPE64_INDEX(fault_addr);
-	unsigned long pd_index = PDE64_INDEX(fault_addr);
-	unsigned long pt_index = PTE64_INDEX(fault_addr);
+	unsigned long pml_index = PML4E64_INDEX(free_start);
+	unsigned long pdp_index = PDPE64_INDEX(free_start);
+	unsigned long pd_index = PDE64_INDEX(free_start);
+	unsigned long pt_index = PTE64_INDEX(free_start);
 	unsigned long pml_index_old;
 	unsigned long pdp_index_old;
 	unsigned long pd_index_old;
 	unsigned long pt_index_old;
-	pml4e64_t * pml_cur = CR3_TO_PML4E64_VA(cr3) + pml_index*sizeof(pml4e64);
+	pml4e64_t * pml_cur = CR3_TO_PML4E64_VA(cr3) + pml_index*sizeof(pml4e64_t);
 	pdpe64_t  * pdp_cur = NULL;
 	pde64_t   * pd_cur  = NULL;
-	pte64_t   * pt_cur  = NULL:
+	pte64_t   * pt_cur  = NULL;
 	
 	int num_pages = free_size/PAGE_SIZE_4KB;
 	unsigned long pages_covered = 0;
@@ -252,7 +252,7 @@ cascade: 	if(pt_index%512==0) {
 			// PT Table's last entry was checked. If it belongs entirely to us, 
 			// that means we checked all of it and so free it. Otherwise, check
 			// if its empty and then free. 
-			pte64_t * pt_base = PAGE_ADDR(pt_cur);
+			pte64_t * pt_base = (pte64_t *)PAGE_ADDR((unsigned long)pt_cur);
 			if(pt_mine==1) {
 				// free pt table
 				printk("PT PAGE FREE-ER: Freeing PT Table\n");
@@ -267,7 +267,7 @@ cascade: 	if(pt_index%512==0) {
 				for(i=0; i<512; i++) {
 					pte64_t * c = pt_base + i*sizeof(pte64_t);
 					if(c->present==1) {
-						occupied = 1;
+						occup = 1;
 						break;
 					}
 				}
@@ -286,7 +286,7 @@ cascade: 	if(pt_index%512==0) {
 			// PD Table's last entry was checked. If it belongs entirely to us, 
 			// that means we checked all of it and so free it. Otherwise, check
 			// if its empty and then free. 
-			pde64_t * pd_base = PAGE_ADDR(pd_cur);
+			pde64_t * pd_base = (pde64_t * )PAGE_ADDR((unsigned long)pd_cur);
 			if(pd_mine==1) {
 				// free pd table
 				printk("PT PAGE FREE-ER: Freeing PD Table\n");
@@ -301,7 +301,7 @@ cascade: 	if(pt_index%512==0) {
 				for(i=0; i<512; i++) {
 					pde64_t * c = pd_base + i*sizeof(pde64_t);
 					if(c->present==1) {
-						occupied = 1;
+						occup = 1;
 						break;
 					}
 				}
@@ -321,7 +321,7 @@ cascade: 	if(pt_index%512==0) {
 			// PDP Table's last entry was checked. If it belongs entirely to us, 
 			// that means we checked all of it and so free it. Otherwise, check
 			// if its empty and then free. 
-			pdpe64_t * pdp_base = PAGE_ADDR(pdp_cur);
+			pdpe64_t * pdp_base = (pdpe64_t *)PAGE_ADDR((unsigned long)pdp_cur);
 			if(pdp_mine==1) {
 				// free pdp table
 				printk("PT PAGE FREE-ER: Freeing PDP Table\n");
@@ -336,7 +336,7 @@ cascade: 	if(pt_index%512==0) {
 				for(i=0; i<512; i++) {
 					pdpe64_t * c = pdp_base + i*sizeof(pdpe64_t);
 					if(c->present==1) {
-						occupied = 1;
+						occup = 1;
 						break;
 					}
 				}
