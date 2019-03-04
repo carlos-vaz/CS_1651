@@ -47,6 +47,7 @@ petmem_deinit_process(struct mem_map * map)
 		list_del(&cursor->list);	
 		kfree(cursor);
 	}
+	// also free the map
 }
 
 
