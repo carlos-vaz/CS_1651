@@ -46,7 +46,7 @@ struct exec_ctx {
 struct pet_thread {
 	pet_thread_id_t id;
 	pet_thread_fn_t func;
-	void * stack;
+	void * stack_bottom;
 	void * stack_rsp;
 	struct list_head list;
 	thread_run_state_t state;
@@ -157,6 +157,7 @@ pet_thread_exit(void * ret_val)
 static int
 __thread_invoker(struct pet_thread * thread)
 {
+	DEBUG("Entered __thread_invoker(id=%d)\n", (int)thread->id);
 	assert(thread->state==PET_THREAD_READY);
 	assert(running->state==PET_THREAD_RUNNING);
 	struct pet_thread * old_thread = running;
@@ -166,9 +167,11 @@ __thread_invoker(struct pet_thread * thread)
 	old_thread->state = PET_THREAD_READY;
 	if(old_thread != &master_dummy_thread)
 		list_add_tail(&old_thread->list, &ready_list);
+	DEBUG("FROM __thread_invoker(id=%d)... added old_thread to ready_list\n", (int)thread->id);
 
 	running->state = PET_THREAD_RUNNING;
 	current = thread->id;
+	DEBUG("FROM __thread_invoker(id=%d), calling __switch_to_stack()\n", (int)thread->id);
 	__switch_to_stack(thread->stack_rsp, old_thread->stack_rsp, thread->id, old_thread->id);
 	return 0;
 }
@@ -187,8 +190,17 @@ pet_thread_create(pet_thread_id_t * thread_id,
 	new_thread->state = PET_THREAD_READY;
 
 	// Allocate stack
-	void * stack = calloc(STACK_SIZE, 1);
-	new_thread->stack = stack;
+	new_thread->stack_bottom = calloc(STACK_SIZE, 1);
+	int num_entries = STACK_SIZE/sizeof(uintptr_t);
+	//uintptr_t * stack_top = ((uintptr_t *)new_thread->stack_bottom)[num_entries];
+
+	// Give stack an initial saved context
+	struct exec_ctx * init_ctx = (struct exec_ctx*)&((uintptr_t *)new_thread->stack_bottom)[num_entries-14];
+	init_ctx->rip = (uintptr_t)func;
+	init_ctx->rbp = (uintptr_t)&((uintptr_t *)new_thread->stack_bottom)[num_entries];
+
+	// Point stack_rsp to end of saved context
+	new_thread->stack_rsp = (void *)init_ctx;
 
 	// Add to ready_list
 	list_add_tail(&new_thread->list, &ready_list);
@@ -238,7 +250,7 @@ pet_thread_yield_to(pet_thread_id_t thread_id)
 
 
 void dump_list(struct list_head *head, char* name) {
-	printf("\n-- -- --  --  --  %s  (th=%d) --  --  --  --  --\n", name, thread_id_count);
+	printf("\n-- -- --  --  --  %s  (thds=%d) --  --  --  --  --\n", name, thread_id_count-1);
 	struct pet_thread *pos, *n;
 	list_for_each_entry_safe(pos, n, head, list) {
 		printf("%d ", (int)pos->id);
@@ -264,6 +276,7 @@ pet_thread_schedule()
 		struct pet_thread *pos;
 		list_for_each_entry(pos, &ready_list, list) {
 			assert(pos->state == PET_THREAD_READY);
+			DEBUG("calling __thread_invoker(id=%d)\n", (int)pos->id);
 			__thread_invoker(pos);
 			// Won't get here until master thread is re-invoked
 			break;
