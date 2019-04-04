@@ -127,10 +127,19 @@ pet_thread_init(void)
 static void
 __dump_stack(struct pet_thread * thread)
 {
+	printf("\n-------- STACK DUMP thread %d --------\n", (int)thread->id);
+	uintptr_t * stack = (uintptr_t *)thread->stack_bottom;
+	uintptr_t * cur = NULL; // = &stack[STACK_SIZE/sizeof(uintptr_t)];
+	for( int i=0; (uintptr_t *)thread->stack_rsp != cur; i++) {
+		cur = &stack[STACK_SIZE/sizeof(uintptr_t) - i];
+		printf("%d:\t%lx", i, *cur);
+		if((uintptr_t *)thread->stack_rsp==cur)
+			printf("\t<----- rsp");
+		printf("\n");
+	}
+	printf("\n");
 
-    /* Implement this */
-    
-    return;
+	return;
 }
 
 
@@ -212,7 +221,6 @@ pet_thread_create(pet_thread_id_t * thread_id,
 
 	return 0;
 }
-
 
 void
 pet_thread_cleanup(pet_thread_id_t prev_id,
