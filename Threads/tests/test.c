@@ -17,7 +17,7 @@ void *
 test_func1(void * arg)
 {
 label:	for(int i=0; i<20; i++) {
-		printf("Hello from thread 1! i = %d\n", i);
+		printf("Hello from thread 1! arg = %ld, i = %d\n", (long)arg, i);
 		pet_thread_yield_to(test_thread2);
 	}
 	pet_thread_exit(NULL);
@@ -28,7 +28,7 @@ void *
 test_func2(void * arg)
 {
 	for(int i=0; i<10; i++) {
-		printf("Hello from thread 2! i = %d\n", i);
+		printf("Hello from thread 2! arg = %ld, i = %d\n", (long)arg, i);
 		pet_thread_yield_to(test_thread1);
 	}
 	pet_thread_exit(NULL);
@@ -51,8 +51,8 @@ int main(int argc, char ** argv)
     printf("Testing Pet Thread Library\n");
 
 
-    ret = pet_thread_create(&test_thread1, test_func1, (void *)1);
-    ret = pet_thread_create(&test_thread2, test_func2, (void *)2);
+    ret = pet_thread_create(&test_thread1, test_func1, (void *)10);
+    ret = pet_thread_create(&test_thread2, test_func2, (void *)20);
 
     if (ret == -1) {
 	ERROR("Could not create test_thread1\n");

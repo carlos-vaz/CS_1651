@@ -275,12 +275,15 @@ pet_thread_create(pet_thread_id_t * thread_id,
 	int num_entries = STACK_SIZE/sizeof(uintptr_t);
 	//uintptr_t * stack_top = ((uintptr_t *)new_thread->stack_bottom)[num_entries];
 
-	// Give stack an initial saved context
+	/* Give stack an initial saved context with the following: 
+	 *	First stack element = __quarantine (where threads 'return')
+	 *	%rip = thread function
+	 *	%rdi = function arguments
+ 	 */
 	struct exec_ctx * init_ctx = (struct exec_ctx*)&((uintptr_t *)new_thread->stack_bottom)[num_entries-16];
 	init_ctx->rip = (uintptr_t)func;
 	init_ctx->rbp = (uintptr_t)&((uintptr_t *)new_thread->stack_bottom)[num_entries-1];
-
-	// Place rip to __quarantine() at the top of the stack
+	init_ctx->rdi = (uintptr_t)arg;
 	((uintptr_t *)new_thread->stack_bottom)[num_entries-1] = (uintptr_t)__quarantine;
 
 	// Point stack_rsp to end of saved context
