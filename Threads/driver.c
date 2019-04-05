@@ -16,7 +16,7 @@
 void *
 test_func1(void * arg)
 {
-label:     printf("Test Function: %ld\n", (long)arg);
+label:     printf("Test Function\n"); //: %ld\n", (long)arg);
     return NULL;
 }
 

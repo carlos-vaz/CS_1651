@@ -137,9 +137,13 @@ __quarantine() {
 static void
 __dump_stack(struct pet_thread * thread)
 {
+	if(thread == &master_dummy_thread) {
+		printf("WARNING: Cannot dump stack of master_dummy_thread.\n");
+		return;
+	}
 	printf("\n-------- STACK DUMP thread %d --------\n", (int)thread->id);
 	uintptr_t * stack = (uintptr_t *)thread->stack_bottom;
-	uintptr_t * cur = NULL; // = &stack[STACK_SIZE/sizeof(uintptr_t)];
+	uintptr_t * cur;
 	for( int i=0; (uintptr_t *)thread->stack_rsp != cur; i++) {
 		cur = &stack[STACK_SIZE/sizeof(uintptr_t) - i];
 		printf("%p:\t%lx", cur, *cur);
