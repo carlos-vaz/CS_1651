@@ -201,10 +201,16 @@ pet_thread_join(pet_thread_id_t    thread_id,
 }
 
 
+/*
+ * The only difference with this exit method is that the thread didn't NATURALLY
+ * return, which would have loaded __quarantine into %rip. All we have to do is 
+ * call __quarantine artificially. Stack state doesn't matter, as thread will never
+ * use its stack again. 
+ */
 void
 pet_thread_exit(void * ret_val)
 {
-    /* Implement this */
+	__quarantine();
 }
 
 
@@ -314,9 +320,8 @@ pet_thread_cleanup(pet_thread_id_t prev_id,
 static void
 __yield_to(struct pet_thread * tgt_thread)
 {
-	DEBUG("ENTERED __yield_to\n");
-	if(tgt_thread->state != PET_THREAD_READY) {
-		DEBUG("WARNING: Thread yielded to is not ready. Scheduling another\n");
+	if(tgt_thread==NULL || tgt_thread->state != PET_THREAD_READY) {
+		DEBUG("WARNING: Thread yielded to is not ready, or doesn't exist (may have exited). Scheduling another\n");
 		pet_thread_schedule();
 		return; // returning point A... Continue with func
 	}

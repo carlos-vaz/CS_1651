@@ -16,20 +16,22 @@ pet_thread_id_t test_thread1, test_thread2;
 void *
 test_func1(void * arg)
 {
-label:	while(1) {
-		printf("Hello from thread 1! My arg is %ld\n", (long)arg);
+label:	for(int i=0; i<20; i++) {
+		printf("Hello from thread 1! i = %d\n", i);
 		pet_thread_yield_to(test_thread2);
 	}
-	return NULL;
+	pet_thread_exit(NULL);
+	return NULL; // never executed
 }
 
 void *
 test_func2(void * arg)
 {
-	while(1) {
-		printf("Hello from thread 2! My arg is %ld\n", (long)arg);
+	for(int i=0; i<10; i++) {
+		printf("Hello from thread 2! i = %d\n", i);
 		pet_thread_yield_to(test_thread1);
 	}
+	pet_thread_exit(NULL);
 	return NULL;
 }
 
