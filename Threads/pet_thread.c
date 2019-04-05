@@ -60,8 +60,10 @@ struct pet_thread      master_dummy_thread;
 
 static LIST_HEAD(ready_list);
 static LIST_HEAD(blocked_list);
-static LIST_HEAD(stopped_list);
+
 static struct pet_thread 	*running;
+static struct pet_thread	*stopped;	// Points to the last stopped thread
+						// Used to find thread for cleaning
 
 
 extern void __switch_to_stack(void            * tgt_stack,
@@ -80,7 +82,8 @@ get_thread(pet_thread_id_t thread_id)
 	
 	if(running->id==thread_id)
 		return running;
-	
+	if(stopped!=NULL && stopped->id==thread_id)
+		return stopped;
 	struct pet_thread * pos;
 	list_for_each_entry(pos, &ready_list, list) {
 		if(pos->id==thread_id) {
@@ -88,11 +91,6 @@ get_thread(pet_thread_id_t thread_id)
 		}
 	}
 	list_for_each_entry(pos, &blocked_list, list) {
-		if(pos->id==thread_id) {
-			return pos;
-		}
-	}
-	list_for_each_entry(pos, &stopped_list, list) {
 		if(pos->id==thread_id) {
 			return pos;
 		}
@@ -122,7 +120,6 @@ pet_thread_init(void)
 
 	list_head_init(&ready_list);
 	list_head_init(&blocked_list);
-	list_head_init(&stopped_list);
 
 	master_dummy_thread.state = PET_THREAD_RUNNING;
 	master_dummy_thread.id = PET_MASTER_THREAD_ID;
@@ -153,9 +150,9 @@ __quarantine() {
 	dump_list(&ready_list, "RL (check 3)");
 	assert(running->state==PET_THREAD_RUNNING);
 	assert(running != &master_dummy_thread);
-	running->state = PET_THREAD_STOPPED;
+	running->state = PET_THREAD_STOPPED;	// signals thread to be cleaned up on next __switch_stack()
 	pet_thread_schedule();
-	// If you get here, that means a (error)
+	// If you get here, that means an exited thread was re-invoked (error)
 	DEBUG("FROM __quarantine(): ERROR! Thread %d, which exited, was re-invoked\n", (int)running->id);
 }
 
@@ -164,6 +161,10 @@ __dump_stack(struct pet_thread * thread)
 {
 	if(thread == &master_dummy_thread) {
 		DEBUG("WARNING: Cannot dump stack of master_dummy_thread.\n");
+		return;
+	}
+	if(thread->state == PET_THREAD_STOPPED) {
+		DEBUG("WARNING: Cannot dump stack exited thread (may have been freed).\n");
 		return;
 	}
 	printf("\n-------- STACK DUMP thread %d --------\n", (int)thread->id);
@@ -226,7 +227,7 @@ __thread_invoker(struct pet_thread * thread)
 	dump_list(&ready_list, "RL (check 2)");
 	
 
-	// Put old thread in appropriate queue
+	// Put old_thread in appropriate queue
 	switch(old_thread->state) {
 		case PET_THREAD_RUNNING	:
 			if(old_thread!=&master_dummy_thread) {
@@ -239,16 +240,10 @@ __thread_invoker(struct pet_thread * thread)
 			list_add_tail(&old_thread->list, &blocked_list);
 			break;
 		case PET_THREAD_STOPPED	:
-			list_add_tail(&old_thread->list, &stopped_list);
+				stopped = old_thread;
 			break;	
 	}
-	
-//	if(old_thread->state != PET_THREAD_STOPPED && old_thread->state != PET_THREAD_BLOCKED)
-//		old_thread->state = PET_THREAD_READY;
-//	if(old_thread != &master_dummy_thread && old_thread->state != PET_THREAD_STOPPED) {
-//		list_add_tail(&old_thread->list, &ready_list);
-//		DEBUG("FROM __thread_invoker(id=%d)... added old_thread to ready_list\n", (int)thread->id);
-//	}
+
 	running->state = PET_THREAD_RUNNING;
 	current = thread->id;
 	DEBUG("FROM __thread_invoker(id=%d), calling __switch_to_stack()\n", (int)thread->id);
@@ -300,9 +295,16 @@ void
 pet_thread_cleanup(pet_thread_id_t prev_id,
 		   pet_thread_id_t my_id)
 {
-	printf("Entered pet_thread_cleanup(): prev_id=%d, my_id=%d\n", (int)prev_id, (int)my_id);
+	DEBUG("Entered pet_thread_cleanup(): prev_id=%d, my_id=%d\n", (int)prev_id, (int)my_id);
 	__dump_stack(get_thread(my_id));
 	__dump_stack(get_thread(prev_id));
+	struct pet_thread * prev_thread = get_thread(prev_id);
+	if(prev_thread->state == PET_THREAD_STOPPED) {
+		// De-allocate thread memory
+		DEBUG("CLEANING THREAD %d\n", (int)prev_thread->id);
+		free(prev_thread->stack_bottom);
+		free(prev_thread);
+	}
 }
 
 
@@ -312,11 +314,13 @@ pet_thread_cleanup(pet_thread_id_t prev_id,
 static void
 __yield_to(struct pet_thread * tgt_thread)
 {
+	DEBUG("ENTERED __yield_to\n");
 	if(tgt_thread->state != PET_THREAD_READY) {
-		printf("WARNING: Thread yielded to is not ready. Scheduling another\n");
+		DEBUG("WARNING: Thread yielded to is not ready. Scheduling another\n");
 		pet_thread_schedule();
 		return; // returning point A... Continue with func
 	}
+	DEBUG("FROM __yield_to: calling __thread_invoker(id=%d)\n", (int)tgt_thread->id);
 	__thread_invoker(tgt_thread);
 	// returning point B... Continue with func
 }
@@ -325,9 +329,10 @@ __yield_to(struct pet_thread * tgt_thread)
 int
 pet_thread_yield_to(pet_thread_id_t thread_id)
 {
-    __yield_to(get_thread(thread_id));
+	DEBUG("ENTERED pet_thread_yield_to (YT thread_id=%d, running->id=%d)\n", (int)thread_id, (int)running->id);
+	__yield_to(get_thread(thread_id));
 
-    return 0;
+	return 0;
 }
 
 
