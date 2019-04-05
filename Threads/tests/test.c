@@ -16,7 +16,7 @@ pet_thread_id_t test_thread1, test_thread2;
 void *
 test_func1(void * arg)
 {
-	while(1) {
+label:	while(1) {
 		printf("Hello from thread %d! My arg is %ld\n", (int)test_thread1, (long)arg);
 		pet_thread_yield_to(test_thread2);
 	}

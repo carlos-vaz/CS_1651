@@ -123,6 +123,16 @@ pet_thread_init(void)
 	return 0;
 }
 
+/*
+ * Returning point for all thread functions that return
+ */
+void
+__quarantine() {
+	DEBUG("FROM __quarantine(): Thread %d exited\n", (int)running->id);
+	assert(running->state==PET_THREAD_RUNNING);
+	assert(running != &master_dummy_thread);
+	running->state = PET_THREAD_STOPPED;
+}
 
 static void
 __dump_stack(struct pet_thread * thread)
@@ -132,9 +142,15 @@ __dump_stack(struct pet_thread * thread)
 	uintptr_t * cur = NULL; // = &stack[STACK_SIZE/sizeof(uintptr_t)];
 	for( int i=0; (uintptr_t *)thread->stack_rsp != cur; i++) {
 		cur = &stack[STACK_SIZE/sizeof(uintptr_t) - i];
-		printf("%d:\t%lx", i, *cur);
+		printf("%p:\t%lx", cur, *cur);
+		if(*cur == (uintptr_t)__quarantine)
+			printf(" <__quarantine>");
+		if(*cur == (uintptr_t)thread->func)
+			printf(" <thread_func>");
 		if((uintptr_t *)thread->stack_rsp==cur)
 			printf("\t<----- rsp");
+		if( ((struct exec_ctx*)&stack[STACK_SIZE/sizeof(uintptr_t)-15])->rbp == (uintptr_t)cur )
+			printf("\t<----- rbp");
 		printf("\n");
 	}
 	printf("\n");
@@ -168,20 +184,21 @@ __thread_invoker(struct pet_thread * thread)
 {
 	DEBUG("Entered __thread_invoker(id=%d)\n", (int)thread->id);
 	assert(thread->state==PET_THREAD_READY);
-	assert(running->state==PET_THREAD_RUNNING);
+	assert(running->state==PET_THREAD_RUNNING || running->state==PET_THREAD_STOPPED);
+		
 	struct pet_thread * old_thread = running;
 	running = thread;
 
 	// TODO: Route old_thread to blocked queue if necessary
 	old_thread->state = PET_THREAD_READY;
-	if(old_thread != &master_dummy_thread)
+	if(old_thread != &master_dummy_thread && old_thread->state != PET_THREAD_STOPPED) {
 		list_add_tail(&old_thread->list, &ready_list);
-	DEBUG("FROM __thread_invoker(id=%d)... added old_thread to ready_list\n", (int)thread->id);
-
+		DEBUG("FROM __thread_invoker(id=%d)... added old_thread to ready_list\n", (int)thread->id);
+	}
 	running->state = PET_THREAD_RUNNING;
 	current = thread->id;
 	DEBUG("FROM __thread_invoker(id=%d), calling __switch_to_stack()\n", (int)thread->id);
-	__switch_to_stack(thread->stack_rsp, old_thread->stack_rsp, thread->id, old_thread->id);
+	__switch_to_stack(&thread->stack_rsp, &old_thread->stack_rsp, thread->id, old_thread->id);
 	return 0;
 }
 
@@ -204,12 +221,15 @@ pet_thread_create(pet_thread_id_t * thread_id,
 	//uintptr_t * stack_top = ((uintptr_t *)new_thread->stack_bottom)[num_entries];
 
 	// Give stack an initial saved context
-	struct exec_ctx * init_ctx = (struct exec_ctx*)&((uintptr_t *)new_thread->stack_bottom)[num_entries-14];
+	struct exec_ctx * init_ctx = (struct exec_ctx*)&((uintptr_t *)new_thread->stack_bottom)[num_entries-15];
 	init_ctx->rip = (uintptr_t)func;
 	init_ctx->rbp = (uintptr_t)&((uintptr_t *)new_thread->stack_bottom)[num_entries];
 
+	// Place rip to __quarantine() at the top of the stack
+	((uintptr_t *)new_thread->stack_bottom)[num_entries] = (uintptr_t)__quarantine;
+
 	// Point stack_rsp to end of saved context
-	new_thread->stack_rsp = (void *)init_ctx;
+	new_thread->stack_rsp = (void *)&((uintptr_t *)new_thread->stack_bottom)[num_entries-15];
 
 	// Add to ready_list
 	list_add_tail(&new_thread->list, &ready_list);
@@ -226,10 +246,10 @@ void
 pet_thread_cleanup(pet_thread_id_t prev_id,
 		   pet_thread_id_t my_id)
 {
-    /* Implement this */
-    
+	printf("Entered pet_thread_cleanup()\n");
+	__dump_stack(get_thread(my_id));
+	__dump_stack(get_thread(prev_id));
 }
-
 
 
 /* 
