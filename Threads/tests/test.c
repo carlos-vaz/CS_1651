@@ -17,7 +17,7 @@ void *
 test_func1(void * arg)
 {
 label:	while(1) {
-		printf("Hello from thread %d! My arg is %ld\n", (int)test_thread1, (long)arg);
+		printf("Hello from thread 1! My arg is %ld\n", (long)arg);
 		pet_thread_yield_to(test_thread2);
 	}
 	return NULL;
@@ -27,7 +27,7 @@ void *
 test_func2(void * arg)
 {
 	while(1) {
-		printf("Hello from thread %d! My arg is %ld\n", (int)test_thread1, (long)arg);
+		printf("Hello from thread 2! My arg is %ld\n", (long)arg);
 		pet_thread_yield_to(test_thread1);
 	}
 	return NULL;
