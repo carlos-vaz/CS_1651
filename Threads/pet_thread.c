@@ -50,6 +50,13 @@ struct pet_thread {
 	void * stack_rsp;
 	struct list_head list;
 	thread_run_state_t state;
+	struct list_head waiting_for_me_list; // LIST_HEAD to chain of `waiting_thread'
+};
+
+// Chain of threads blocked waiting for another to exit ()
+struct waiting_thread {
+	struct pet_thread * thread;
+	struct list_head list;
 };
 
 
@@ -103,13 +110,14 @@ get_thread(pet_thread_id_t thread_id)
 static pet_thread_id_t
 get_thread_id(struct pet_thread * thread)
 {
-    if (thread == &(master_dummy_thread)) {
-	return PET_MASTER_THREAD_ID;
-    }
+	if (thread == &(master_dummy_thread)) {
+		return PET_MASTER_THREAD_ID;
+	}
 
-    /* Implement this */
-    
-    return 0;
+	if(thread!=NULL)
+		return thread->id;
+
+	return 0;
 }
 
 
@@ -140,17 +148,50 @@ void dump_list(struct list_head *head, char* name) {
 	printf("\n-- -- --  --  --   --  --  --  --  --  --\n");
 }
 
+void dump_list_w(struct list_head *head, char* name) {
+	printf("\n-- -- --  --  --  %s  --  --  --  --  --\n", name);
+	DEBUG("HEAD thread id: %d\n", (int)list_entry(head, struct pet_thread, waiting_for_me_list)->id);
+	struct waiting_thread *pos;
+	list_for_each_entry(pos, head, list) {
+		printf("%d ", (int)pos->thread->id);
+		if(pos->list.next!=head)
+			printf("--> ");
+	}
+	printf("\n-- -- --  --  --   --  --  --  --  --  --\n");
+}
+
 
 /*
- * Returning point for all thread functions that return
+ * Returning point for all thread functions that return. Checks `waiting_for_me_list' of exiting thread
+ * to see if any blocked threads can be put in ready_list and scheduled. 
  */
 void
 __quarantine() {
 	DEBUG("FROM __quarantine(): Thread %d exited\n", (int)running->id);
+
+	DEBUG("FROM __quarantine(): Checking thread %d's blocked waiters...\n", (int)running->id);
+	// Checked dependent (blocked) threads and move them to ready_list
+	struct waiting_thread *pos, *n;
+	if(!list_empty(&running->waiting_for_me_list)) {
+		dump_list_w(&running->waiting_for_me_list, "WAITING_FOR_ME_LIST");
+		list_for_each_entry_safe(pos, n, &running->waiting_for_me_list, list) {
+			assert(pos->thread->state == PET_THREAD_BLOCKED);
+			pos->thread->state = PET_THREAD_READY;
+			list_del(&pos->thread->list); // remove from blocked_list
+			list_add_tail(&pos->thread->list, &ready_list); // add to ready list
+			list_del(&pos->list);	// remove from waiting_for_me_list
+			free(pos);
+		}
+		assert(list_empty(&running->waiting_for_me_list));
+	}
+	else 
+		DEBUG("Thread %d has no blocked waiters.\n", (int)running->id);
+
+	// Exit thread and schedule a new one
 	dump_list(&ready_list, "RL (check 3)");
 	assert(running->state==PET_THREAD_RUNNING);
 	assert(running != &master_dummy_thread);
-	running->state = PET_THREAD_STOPPED;	// signals thread to be cleaned up on next __switch_stack()
+	running->state = PET_THREAD_STOPPED;	// signal thread to be cleaned up on next __switch_stack()
 	pet_thread_schedule();
 	// If you get here, that means an exited thread was re-invoked (error)
 	DEBUG("FROM __quarantine(): ERROR! Thread %d, which exited, was re-invoked\n", (int)running->id);
@@ -164,7 +205,7 @@ __dump_stack(struct pet_thread * thread)
 		return;
 	}
 	if(thread->state == PET_THREAD_STOPPED) {
-		DEBUG("WARNING: Cannot dump stack exited thread (may have been freed).\n");
+		DEBUG("WARNING: Cannot dump stack of exited thread (may have been freed).\n");
 		return;
 	}
 	printf("\n-------- STACK DUMP thread %d --------\n", (int)thread->id);
@@ -179,7 +220,7 @@ __dump_stack(struct pet_thread * thread)
 			printf(" <thread_func>");
 		if((uintptr_t *)thread->stack_rsp==cur)
 			printf("\t<----- rsp");
-		if( ((struct exec_ctx*)&stack[STACK_SIZE/sizeof(uintptr_t)-16])->rbp == (uintptr_t)cur )
+		if(*(uintptr_t*)thread->stack_rsp == (uintptr_t)cur)
 			printf("\t<----- rbp");
 		printf("\n");
 	}
@@ -189,15 +230,30 @@ __dump_stack(struct pet_thread * thread)
 }
 
 
-
+/*
+ * Thread (A) that calls join() will be marked `BLOCKED' (and placed in blocked_list later by __thread_invoker).
+ * Then, thread (A) is added to the linked list `waiting_for_me_list' of thread (B) that was 'joined' to.  
+ * When thread B exits and executes __quarantine(), its `waiting_for_me_list' field is checked to see if
+ * any threads are blocked waiting for it to exit. If so, that those blocked threads are put in the ready_list. 
+ */
 int
 pet_thread_join(pet_thread_id_t    thread_id,
 		void            ** ret_val)
 {
+	DEBUG("ENTERED pet_thread_join\n");
+	struct pet_thread *thread = get_thread(thread_id);
+	if(thread==NULL) {
+		DEBUG("FROM pet_thread_join: Thread to join doesn't exist.\n");
+		return -1;
+	}
+	assert(running->state == PET_THREAD_RUNNING);
+	running->state = PET_THREAD_BLOCKED; // __thread_invoker will put thread in blocked_list
 
-    /* Implement this */
-    
-    return 0;
+	struct waiting_thread * w_t = (struct waiting_thread*)malloc(sizeof(struct waiting_thread));
+	w_t->thread = running;
+	list_add_tail(&w_t->list, &thread->waiting_for_me_list);
+	pet_thread_schedule();
+	return 0;
 }
 
 
@@ -206,10 +262,13 @@ pet_thread_join(pet_thread_id_t    thread_id,
  * return, which would have loaded __quarantine into %rip. All we have to do is 
  * call __quarantine artificially. Stack state doesn't matter, as thread will never
  * use its stack again. 
+ *
+ * Also, threads that want to return some value must use this method. 
  */
 void
 pet_thread_exit(void * ret_val)
 {
+	// Move retval into %rax, then call __quarantine
 	__quarantine();
 }
 
@@ -219,8 +278,8 @@ static int
 __thread_invoker(struct pet_thread * thread)
 {
 	DEBUG("Entered __thread_invoker(id=%d)\n", (int)thread->id);
-	assert(thread->state==PET_THREAD_READY);
-	assert(running->state==PET_THREAD_RUNNING || running->state==PET_THREAD_STOPPED);
+	assert(thread->state == PET_THREAD_READY);
+	assert(running->state != PET_THREAD_READY);
 		
 	// Move `thread' out of ready_list and into `running'
 	struct pet_thread * old_thread = running;
@@ -263,22 +322,25 @@ pet_thread_create(pet_thread_id_t * thread_id,
 		  pet_thread_fn_t   func,
 		  void            * arg)
 {
-	// Create thread struct
+	// Create thread struct and initialize fields
 	struct pet_thread * new_thread = (struct pet_thread*)malloc(sizeof(struct pet_thread));
 	new_thread->id = (pet_thread_id_t)thread_id_count++;
 	*thread_id = new_thread->id;
 	new_thread->func = func;
 	new_thread->state = PET_THREAD_READY;
+	list_head_init(&new_thread->waiting_for_me_list);
+	assert(new_thread->waiting_for_me_list.next == new_thread->waiting_for_me_list.prev && new_thread->waiting_for_me_list.next == &new_thread->waiting_for_me_list);
 
-	// Allocate stack
+	// Allocate a stack
 	new_thread->stack_bottom = calloc(STACK_SIZE, 1);
 	int num_entries = STACK_SIZE/sizeof(uintptr_t);
-	//uintptr_t * stack_top = ((uintptr_t *)new_thread->stack_bottom)[num_entries];
 
-	/* Give stack an initial saved context with the following: 
-	 *	First stack element = __quarantine (where threads 'return')
-	 *	%rip = thread function
-	 *	%rdi = function arguments
+	/* Give stack an initial saved context with the following: (The first stack element is
+	 * given the __quarantine() address so that, if a thread ever calls "ret" x86 instruction, 
+	 * this value will be popped into %rip)
+	 *	First stack element <-- __quarantine() address (where threads 'return')
+	 *	%rip restore value  <-- thread function address
+	 *	%rdi restore value  <-- thread function argument
  	 */
 	struct exec_ctx * init_ctx = (struct exec_ctx*)&((uintptr_t *)new_thread->stack_bottom)[num_entries-16];
 	init_ctx->rip = (uintptr_t)func;

@@ -4,7 +4,8 @@ AR  = ar
 CFLAGS = -g
 LFLAGS = -lpthread
 
-TGT = 	test 
+TGT = 	test \
+	test_join
 
 OBJS =  ../pet_thread.o \
 	../pet_thread_hw.o \
@@ -35,6 +36,8 @@ build = \
 all: $(TGT)
 
 test : $(OBJS) test.o
+
+test_join : $(OBJS) test_join.o
 
 clean: 
 	rm -f *.o $(OBJS) $(TGT)
