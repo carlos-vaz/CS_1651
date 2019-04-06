@@ -5,7 +5,8 @@ CFLAGS = -g
 LFLAGS = -lpthread
 
 TGT = 	test \
-	test_join
+	test_join \
+	test_nested_join
 
 OBJS =  ../pet_thread.o \
 	../pet_thread_hw.o \
@@ -38,6 +39,8 @@ all: $(TGT)
 test : $(OBJS) test.o
 
 test_join : $(OBJS) test_join.o
+
+test_nested_join : $(OBJS) test_nested_join.o
 
 clean: 
 	rm -f *.o $(OBJS) $(TGT)
