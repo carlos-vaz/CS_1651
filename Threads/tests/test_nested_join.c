@@ -18,12 +18,13 @@ test_func1(void * arg)
 {
 	void * retval;
 label:	for(int i=0; i<10; i++) {
-		printf("Hello from thread 1! arg = %ld, i = %d\n", (long)arg, i);
-		if(i==5)
-			pet_thread_join(test_thread2, retval);
+		printf("PROG: Hello from thread 1! arg = %ld, i = %d\n", (long)arg, i);
+		if(i==5) {
+			pet_thread_join(test_thread2, &retval);
+			printf("\tPROG: (Thread 1): Recieved from thread %ld\n", (long)retval);
+		}
 	}
 	pet_thread_exit(NULL);
-	return NULL; // never executed
 }
 
 void *
@@ -31,12 +32,13 @@ test_func2(void * arg)
 {
 	void * retval;
 	for(int i=0; i<10; i++) {
-		printf("Hello from thread 2! arg = %ld, i = %d\n", (long)arg, i);
-		if(i==5)
-			pet_thread_join(test_thread3, retval);
+		printf("PROG: Hello from thread 2! arg = %ld, i = %d\n", (long)arg, i);
+		if(i==5) {
+			pet_thread_join(test_thread3, &retval);
+			printf("\tPROG: (Thread 2): Recieved from thread %ld\n", (long)retval);
+		}
 	}
-	pet_thread_exit(NULL);
-	return NULL;
+	pet_thread_exit((void*)2);
 }
 
 
@@ -44,10 +46,9 @@ void *
 test_func3(void * arg)
 {
 	for(int i=0; i<10; i++) {
-		printf("Hello from thread 3! arg = %ld, i = %d\n", (long)arg, i);
+		printf("PROG: Hello from thread 3! arg = %ld, i = %d\n", (long)arg, i);
 	}
-	pet_thread_exit(NULL);
-	return NULL;
+	pet_thread_exit((void*)3);
 }
 
 

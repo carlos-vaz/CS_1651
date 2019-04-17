@@ -17,12 +17,12 @@ void *
 test_func1(void * arg)
 {
 	void * retval;
-label:	for(int i=0; i<10; i++) {
+test_func1_label:	for(int i=0; i<10; i++) {
 		printf("Hello from thread 1! arg = %ld, i = %d\n", (long)arg, i);
 		if(i==5)
-			pet_thread_join(test_thread2, retval);
+			pet_thread_join(test_thread2, &retval);
 	}
-	pet_thread_exit(NULL);
+	//pet_thread_exit(NULL);
 	return NULL; // never executed
 }
 
@@ -32,7 +32,7 @@ test_func2(void * arg)
 	for(int i=0; i<10; i++) {
 		printf("Hello from thread 2! arg = %ld, i = %d\n", (long)arg, i);
 	}
-	pet_thread_exit(NULL);
+	//pet_thread_exit(NULL);
 	return NULL;
 }
 

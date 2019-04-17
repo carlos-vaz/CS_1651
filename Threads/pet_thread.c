@@ -45,12 +45,13 @@ struct exec_ctx {
 
 struct pet_thread {
 	pet_thread_id_t id;
-	pet_thread_fn_t func;
-	void * stack_bottom;
-	void * stack_rsp;
-	struct list_head list;
+	pet_thread_fn_t func;			// Debugging only
+	void * stack_bottom;			// Used only to free stack
+	void * stack_rsp;			// Stack pointer
+	struct list_head list;			// LIST_HEAD to read_list & blocked_list
 	thread_run_state_t state;
-	struct list_head waiting_for_me_list; // LIST_HEAD to chain of `waiting_thread'
+	struct list_head waiting_for_me_list; 	// LIST_HEAD to chain of `waiting_thread'
+	uint64_t return_reciever;			// threads calling join() expect a return value here
 };
 
 // Chain of threads blocked waiting for another to exit ()
@@ -162,11 +163,20 @@ void dump_list_w(struct list_head *head, char* name) {
 
 
 /*
- * Returning point for all thread functions that return. Checks `waiting_for_me_list' of exiting thread
- * to see if any blocked threads can be put in ready_list and scheduled. 
+ * Returning point for all thread functions that return. Actions: 
+ * 
+ * 	1. Moves %rax (return) register to a local variable (ret_val) and,
+ * 	   if it finds any blocked thread waiting for this exit event, 
+ * 	   copies `ret_val' to `return_receiver' of the blocked thread.
+ * 
+ * 	2. Checks `waiting_for_me_list' of exiting thread to see if any blocked
+ * 	   threads can be put in ready_list and scheduled. 
  */
 void
-__quarantine() {
+__quarantine(void) {
+	uint64_t ret_val;
+from_rax:	asm ("movq %%rax, %0;" : "+m" (ret_val) : : "memory");
+	
 	DEBUG("FROM __quarantine(): Thread %d exited\n", (int)running->id);
 
 	DEBUG("FROM __quarantine(): Checking thread %d's blocked waiters...\n", (int)running->id);
@@ -176,6 +186,7 @@ __quarantine() {
 		dump_list_w(&running->waiting_for_me_list, "WAITING_FOR_ME_LIST");
 		list_for_each_entry_safe(pos, n, &running->waiting_for_me_list, list) {
 			assert(pos->thread->state == PET_THREAD_BLOCKED);
+			pos->thread->return_reciever = ret_val;	// Copy exiting thread's ret val to blocked thread
 			pos->thread->state = PET_THREAD_READY;
 			list_del(&pos->thread->list); // remove from blocked_list
 			list_add_tail(&pos->thread->list, &ready_list); // add to ready list
@@ -253,22 +264,28 @@ pet_thread_join(pet_thread_id_t    thread_id,
 	w_t->thread = running;
 	list_add_tail(&w_t->list, &thread->waiting_for_me_list);
 	pet_thread_schedule();
+
+	// Before thread returns to function, fill `ret_val' from this thread's `return_reciever' field
+	//*ret_val = (void *)running->return_reciever;
 	return 0;
 }
 
 
 /*
- * The only difference with this exit method is that the thread didn't NATURALLY
- * return, which would have loaded __quarantine into %rip. All we have to do is 
- * call __quarantine artificially. Stack state doesn't matter, as thread will never
- * use its stack again. 
+ * Threads can exit in two ways: 
  *
- * Also, threads that want to return some value must use this method. 
+ * 	1. By calling "ret" x86 instruction, %rip becomes __quarantine(), which 
+ *	   immediately checks %rax (return) register and gives the return value
+ * 	   to any threads that ask for it. 
+ *
+ * 	2. By calling this exit() function, the ret_val arg is artificially copied
+ *	   to the %rax (return) register. So when __quarantine() is called, the 
+ * 	   behavior is the same as 1. 
  */
 void
 pet_thread_exit(void * ret_val)
 {
-	// Move retval into %rax, then call __quarantine
+to_rax:	asm ("movq %0, %%rax;\n" :  : "m" (ret_val) : "rax");
 	__quarantine();
 }
 
@@ -328,6 +345,7 @@ pet_thread_create(pet_thread_id_t * thread_id,
 	*thread_id = new_thread->id;
 	new_thread->func = func;
 	new_thread->state = PET_THREAD_READY;
+	new_thread->return_reciever = (uint64_t)NULL;
 	list_head_init(&new_thread->waiting_for_me_list);
 	assert(new_thread->waiting_for_me_list.next == new_thread->waiting_for_me_list.prev && new_thread->waiting_for_me_list.next == &new_thread->waiting_for_me_list);
 
