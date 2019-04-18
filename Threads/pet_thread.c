@@ -174,8 +174,8 @@ void dump_list_w(struct list_head *head, char* name) {
  */
 void
 __quarantine(void) {
-	uint64_t ret_val;
-from_rax:	asm ("movq %%rax, %0;" : "+m" (ret_val) : : "memory");
+//	uint64_t ret_val;
+//from_rax:	asm ("movq %%rax, %0;" : "+m" (ret_val) : : "memory");
 	
 	DEBUG("FROM __quarantine(): Thread %d exited\n", (int)running->id);
 
@@ -186,7 +186,7 @@ from_rax:	asm ("movq %%rax, %0;" : "+m" (ret_val) : : "memory");
 		dump_list_w(&running->waiting_for_me_list, "WAITING_FOR_ME_LIST");
 		list_for_each_entry_safe(pos, n, &running->waiting_for_me_list, list) {
 			assert(pos->thread->state == PET_THREAD_BLOCKED);
-			pos->thread->return_reciever = ret_val;	// Copy exiting thread's ret val to blocked thread
+			//pos->thread->return_reciever = ret_val;	// Copy exiting thread's ret val to blocked thread
 			pos->thread->state = PET_THREAD_READY;
 			list_del(&pos->thread->list); // remove from blocked_list
 			list_add_tail(&pos->thread->list, &ready_list); // add to ready list
@@ -266,7 +266,7 @@ pet_thread_join(pet_thread_id_t    thread_id,
 	pet_thread_schedule();
 
 	// Before thread returns to function, fill `ret_val' from this thread's `return_reciever' field
-	//*ret_val = (void *)running->return_reciever;
+	*ret_val = (void *)running->return_reciever;
 	return 0;
 }
 
@@ -285,7 +285,18 @@ pet_thread_join(pet_thread_id_t    thread_id,
 void
 pet_thread_exit(void * ret_val)
 {
-to_rax:	asm ("movq %0, %%rax;\n" :  : "m" (ret_val) : "rax");
+//to_rax:	asm ("movq %0, %%rax;\n" :  : "m" (ret_val) : "rax");
+
+	// Copy ret_val to return_receiver of threads blocked waiting for this exit event
+	DEBUG("Copying ret_val to waiting threads...\n");
+	struct waiting_thread *pos, *n;
+	if(!list_empty(&running->waiting_for_me_list)) {
+		list_for_each_entry_safe(pos, n, &running->waiting_for_me_list, list) {
+			assert(pos->thread->state == PET_THREAD_BLOCKED);
+			pos->thread->return_reciever = (uint64_t)ret_val;	// Copy exiting thread's ret val to blocked thread
+		}
+	}
+
 	__quarantine();
 }
 
