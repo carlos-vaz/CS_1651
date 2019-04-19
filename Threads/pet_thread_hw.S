@@ -60,3 +60,9 @@ __abort_to_stack:
 	movq (%rdi), %rsp;
 	restore_registers;
 	ret;
+
+.align 8
+.globl __capture_return
+__capture_return:
+	movq %rax, %rdi;
+	call __quarantine; 

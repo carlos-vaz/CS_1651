@@ -24,7 +24,10 @@ label:	for(int i=0; i<10; i++) {
 			printf("\tPROG: (Thread 1): Recieved from thread %ld\n", (long)retval);
 		}
 	}
-	pet_thread_exit(NULL);
+	// Choose from 2 ways to exit: 
+
+	//pet_thread_exit(NULL);
+	return NULL;
 }
 
 void *
@@ -38,7 +41,10 @@ test_func2(void * arg)
 			printf("\tPROG: (Thread 2): Recieved from thread %ld\n", (long)retval);
 		}
 	}
-	pet_thread_exit((void*)2);
+	// Choose from 2 ways to exit: 
+
+	//pet_thread_exit((void*)2);
+	return (void*)2;
 }
 
 
@@ -48,7 +54,10 @@ test_func3(void * arg)
 	for(int i=0; i<10; i++) {
 		printf("PROG: Hello from thread 3! arg = %ld, i = %d\n", (long)arg, i);
 	}
-	pet_thread_exit((void*)3);
+	// Choose from 2 ways to exit: 
+
+	//pet_thread_exit((void*)3);
+	return (void*)3;
 }
 
 
@@ -59,12 +68,12 @@ int main(int argc, char ** argv)
     ret = pet_thread_init();
 
     if (ret == -1) {
-	ERROR("Could not initialize Pet Thread Library\n");
+	ERROR("PROG: Could not initialize Pet Thread Library\n");
 	return -1;
     }
 
     
-    printf("Testing Pet Thread Library\n");
+    printf("PROG: Testing Pet Thread Library\n");
 
 
     ret = pet_thread_create(&test_thread1, test_func1, (void *)11);
@@ -72,7 +81,7 @@ int main(int argc, char ** argv)
     ret = pet_thread_create(&test_thread3, test_func3, (void *)33);
 
     if (ret == -1) {
-	ERROR("Could not create test_thread1\n");
+	ERROR("PROG: Could not create test_thread1\n");
 	return -1;
     }
     
@@ -81,7 +90,7 @@ int main(int argc, char ** argv)
     ret = pet_thread_run();
 
     if (ret == -1) {
-	ERROR("Error encountered while running pet threads (ret=%d)\n", ret);
+	ERROR("PROG: Error encountered while running pet threads (ret=%d)\n", ret);
 	return -1;
     }
     
