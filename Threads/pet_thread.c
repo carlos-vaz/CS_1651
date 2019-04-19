@@ -14,7 +14,7 @@
 #include "pet_log.h"
 
 
-#define VERBOSE 1
+#define VERBOSE 0
 
 #define STACK_SIZE (4096 * 32)
 
