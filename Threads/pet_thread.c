@@ -434,19 +434,17 @@ pet_thread_schedule()
 		return 9;	// NEVER REACHED
 	}
 
-	while( !list_empty(&ready_list) ) {
-		if(VERBOSE) dump_list(&ready_list, "Ready List");
+	if(VERBOSE) dump_list(&ready_list, "Ready List");
 
-		struct pet_thread *pos;
-		list_for_each_entry(pos, &ready_list, list) {
-			assert(pos->state == PET_THREAD_READY);
-			if(VERBOSE) DEBUG("calling __thread_invoker(id=%d)\n", (int)pos->id);
-			__thread_invoker(pos);
-			// Won't get here until master thread is re-invoked
-			break;
-		}
+	struct pet_thread *pos;
+	list_for_each_entry(pos, &ready_list, list) {
+		assert(pos->state == PET_THREAD_READY);
+		if(VERBOSE) DEBUG("calling __thread_invoker(id=%d)\n", (int)pos->id);
+		__thread_invoker(pos);
+		// Won't get here until master thread is re-invoked
+		break;
 	}
-    
+	    
 	return 0;
 }
 
