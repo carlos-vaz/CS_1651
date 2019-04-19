@@ -24,6 +24,12 @@ seed the stack with a pointer to a custom made assembly function: \_\_capture\_r
 
 ## Returning values from joined-to threads
 We implemented a nifty scheme to capture return values. A thread has two ways of exiting (both can return a value):
+
+###Example
+ - Item 1
+ - Item 2
+  - Sub Item 1
+  - Sub Item 2
  
 	- Placing return value into %rax and calling the "retq" x86 instruction. This jumps to \_\_capture\_return() (as explained above). By calling "return" in the thread function the compiler will first copy the return value to %rax (if a 64 bit value), 
 then it will change stack pointer to point to the value of %rbp, which will put the rsp right above the stack entry containing \_\_capture\_return. 
