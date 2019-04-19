@@ -1,7 +1,3 @@
-/* Pet Thread Library test driver
- *  (c) 2017, Jack Lange <jacklange@cs.pitt.edu>
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -24,6 +20,8 @@ label:	for(int i=0; i<10; i++) {
 			printf("\tPROG: (Thread 1): Recieved from thread %ld\n", (long)retval);
 		}
 	}
+
+
 	// Choose from 2 ways to exit: 
 
 	//pet_thread_exit(NULL);
@@ -41,6 +39,7 @@ test_func2(void * arg)
 			printf("\tPROG: (Thread 2): Recieved from thread %ld\n", (long)retval);
 		}
 	}
+
 	// Choose from 2 ways to exit: 
 
 	//pet_thread_exit((void*)2);
@@ -54,6 +53,7 @@ test_func3(void * arg)
 	for(int i=0; i<10; i++) {
 		printf("PROG: Hello from thread 3! arg = %ld, i = %d\n", (long)arg, i);
 	}
+
 	// Choose from 2 ways to exit: 
 
 	//pet_thread_exit((void*)3);
