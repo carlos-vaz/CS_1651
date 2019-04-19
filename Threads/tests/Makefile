@@ -6,7 +6,8 @@ LFLAGS = -lpthread
 
 TGT = 	test \
 	test_join \
-	test_nested_join
+	test_nested_join \
+	test_many
 
 OBJS =  ../pet_thread.o \
 	../pet_thread_hw.o \
@@ -41,6 +42,8 @@ test : $(OBJS) test.o
 test_join : $(OBJS) test_join.o
 
 test_nested_join : $(OBJS) test_nested_join.o
+
+test_many : $(OBJS) test_many.o
 
 clean: 
 	rm -f *.o $(OBJS) $(TGT)
