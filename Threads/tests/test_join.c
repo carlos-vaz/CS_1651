@@ -23,7 +23,7 @@ test_func1_label:	for(int i=0; i<10; i++) {
 			pet_thread_join(test_thread2, &retval);
 	}
 	//pet_thread_exit(NULL);
-	return NULL; // never executed
+	return NULL;
 }
 
 void *
