@@ -24,12 +24,12 @@ seed the stack with a pointer to a custom made assembly function: __capture_retu
 
 ## Returning values from joined-to threads
 We implemented a nifty scheme to capture return values. A thread has two ways of exiting (both can return a value): 
- Markup : 1. Placing return value into %rax and calling the "retq" x86 instruction. This jumps to __capture_return() (as explained above). By calling "return" in the thread function, the compiler will first copy the return value to %rax (if a 64 bit value), 
+	1. Placing return value into %rax and calling the "retq" x86 instruction. This jumps to __capture_return() (as explained above). By calling "return" in the thread function, the compiler will first copy the return value to %rax (if a 64 bit value), 
 then it will change stack pointer to point to the value of %rbp, which will put the rsp right above the stack entry containing __capture_return. 
 Lastly, the compiler inserts a "retq" instruction which will pop __capture_return into %rip, thus jumping to it. Inside __capture_pointer, we 
 immediately move the contents of %rax to %rdi (the argument to the next function) and call __quarantine(), which will eventually copy the argument 
 to the threads that need it. By writing __capture_return in assembly, we prevent the compiler from changing (if it wished) %rax before we could get 
 to it, since the compiler has that right (%rax is a caller saver register). 
 
-          2. Calling pet_thread_exit() with the return value as the argument. Inside pet_thread_exit(), __quarantine() is called with the ret_val 
+	2. Calling pet_thread_exit() with the return value as the argument. Inside pet_thread_exit(), __quarantine() is called with the ret_val 
 		as the argument
