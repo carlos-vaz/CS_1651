@@ -16,16 +16,14 @@
 void *
 test_func1(void * arg)
 {
-label:     printf("Test Function\n"); //: %ld\n", (long)arg);
+  
+    printf("Test Function: %ld\n", (long)arg);
     return NULL;
 }
 
 
 int main(int argc, char ** argv)
 {
-
-test_call:	test_func1((void *)7);
-
     pet_thread_id_t test_thread1;
     int ret = 0;
 
