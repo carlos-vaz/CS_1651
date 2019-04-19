@@ -1,7 +1,3 @@
-/* Pet Thread Library test driver
- *  (c) 2017, Jack Lange <jacklange@cs.pitt.edu>
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -22,6 +18,9 @@ test_func1_label:	for(int i=0; i<10; i++) {
 		if(i==5)
 			pet_thread_join(test_thread2, &retval);
 	}
+
+	//choose from 2 ways to exit
+
 	//pet_thread_exit(NULL);
 	return NULL;
 }
@@ -32,6 +31,9 @@ test_func2(void * arg)
 	for(int i=0; i<10; i++) {
 		printf("PROG: Hello from thread 2! arg = %ld, i = %d\n", (long)arg, i);
 	}
+
+	//choose from 2 ways to exit
+
 	//pet_thread_exit(NULL);
 	return NULL;
 }

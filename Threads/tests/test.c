@@ -1,7 +1,3 @@
-/* Pet Thread Library test driver
- *  (c) 2017, Jack Lange <jacklange@cs.pitt.edu>
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -20,6 +16,7 @@ label:	for(int i=0; i<20; i++) {
 		printf("Hello from thread 1! arg = %ld, i = %d\n", (long)arg, i);
 		pet_thread_yield_to(test_thread2);
 	}
+
 	pet_thread_exit(NULL);
 	return NULL; // never executed
 }
@@ -31,8 +28,9 @@ test_func2(void * arg)
 		printf("Hello from thread 2! arg = %ld, i = %d\n", (long)arg, i);
 		pet_thread_yield_to(test_thread1);
 	}
-	pet_thread_exit(NULL);
-	return NULL;
+	
+	//pet_thread_exit(NULL);
+	return NULL;  // tests return
 }
 
 
