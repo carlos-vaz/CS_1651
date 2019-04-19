@@ -25,12 +25,10 @@ seed the stack with a pointer to a custom made assembly function: \_\_capture\_r
 ## Returning values from joined-to threads
 We implemented a nifty scheme to capture return values. A thread has two ways of exiting (both can return a value):
  
- - Placing return value into %rax and calling the "retq" x86 instruction. This jumps to \_\_capture\_return() (as explained above). By calling "return" in the thread function the compiler will first copy the return value to %rax (if a 64 bit value), 
-then it will change stack pointer to point to the value of %rbp, which will put the rsp right above the stack entry containing \_\_capture\_return. 
-Lastly, the compiler inserts a "retq" instruction which will pop \_\_capture\_return into %rip, thus jumping to it. Inside \_\_capture\_pointer, we 
-immediately move the contents of %rax to %rdi (the argument to the next function) and call \_\_quarantine(), which will eventually copy the argument 
+ - Placing return value into %rax and calling the "retq" x86 instruction. This jumps to \_\_capture\_return() (as explained above). By calling "return" in the thread function the compiler will first copy the return value to %rax (if a 64 bit value), then it will change stack pointer to point to the value of %rbp, which will put the rsp right above the stack entry containing \_\_capture\_return. Lastly, the compiler inserts a "retq" instruction which will pop \_\_capture\_return into %rip, thus jumping to it. Inside \_\_capture\_pointer, we immediately move the contents of %rax to %rdi (the argument to the next function) and call \_\_quarantine(), which will eventually copy the argument 
 to the threads that need it. By writing \_\_capture\_return in assembly, we prevent the compiler from changing (if it wished) %rax before we could get 
 to it, since the compiler has that right (%rax is a caller saver register). 
 
- - Calling pet\_thread\_exit() with the return value as the argument. Inside pet\_thread\_exit(), \_\_quarantine() is called with the ret\_val 
-		as the argument
+ - Calling pet\_thread\_exit() with the return value as the argument. Inside pet\_thread\_exit(), \_\_quarantine() is called with the ret\_val as the argument, and 
+the behavior is the same as the first method. 
+
