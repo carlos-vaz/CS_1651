@@ -7,7 +7,7 @@
 
 
 #define NUM_THREADS 20
-#define NUM_CYCLES 2
+#define NUM_CYCLES 4
 
 pet_thread_id_t test_thread[NUM_THREADS];
 
@@ -71,7 +71,6 @@ int main(int argc, char ** argv)
     	}
     }
 
-    printf("\n\nnote: for easy graphical checking set VERBOSE 0 in pet_thread.c\n\n");
 
     printf("Testing pet_thread_yield_to(...) with %d threads & %d cycles\n\n", NUM_THREADS, NUM_CYCLES);
 
@@ -111,6 +110,7 @@ int main(int argc, char ** argv)
 
 
 
+    printf("\n\nnote: for easy graphical checking set VERBOSE 0 in pet_thread.c\n\n");
 
 
 
